@@ -1,0 +1,75 @@
+{
+  "recuperacion": {
+    "solo semantica": {
+      "recall": 0.7666666666666667,
+      "precision": 0.58
+    },
+    "hibrida ponderada": {
+      "recall": 0.85,
+      "precision": 0.6066666666666667
+    }
+  },
+  "generacion": {
+    "n": 8,
+    "fidelidad": 1.0,
+    "relevancia": 1.0,
+    "detalle": [
+      {
+        "id": 1,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Tengo un token valido de ms-auth con los scopes correctos pero /v1/pedidos me devuelve 401. Por que?",
+        "respuesta": "El endpoint **/v1/pedidos** está protegido por el autorizador de **Microsoft Entra ID**.  \nAunque tu token provenga de `ms‑auth`, tenga el `iss` correcto, la audiencia `exp1‑api` y los scopes `pedidos.leer` / `pedidos.escribir`, el API Gateway valida **un solo emisor** por ruta. Como la ruta de pedidos está asociada al autorizador de Entra ID, el token emitido por `ms‑auth` es rechazado antes de llegar al microservicio, devolviéndose 401 Unauthorized [1].  \n\nEn resumen, el 401 ocurre porque el token proviene del emisor equivocado; debes usar un token emitido por Microsoft Entra ID (o configurar un autorizador adicional para `ms‑auth`)."
+      },
+      {
+        "id": 4,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Por que el sistema usa RS256 y no HS256 para firmar los tokens?",
+        "respuesta": "El IdP de Pedidos360 firma los tokens con **RS256** porque el autorizador JWT de **AWS API Gateway** valida la firma descargando las claves públicas desde el `jwks_uri` publicado por el emisor. Con **HS256** la firma depende de un secreto compartido que el gateway no posee, por lo que no podría validar los tokens. Por eso se usa RSA y se publica la clave pública [2][5]."
+      },
+      {
+        "id": 7,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Llamo a /api/v1/pedidos desde internet y me da 404. Que pasa?",
+        "respuesta": "El error 404 ocurre porque la ruta que estás usando es la del microservicio interno (`/api/v1/pedidos`). Desde Internet el API Gateway publica esa operación bajo la ruta **`/v1/pedidos`** y reescribe el prefijo al reenviar. Usa `/v1/pedidos` en lugar de `/api/v1/pedidos`【3】."
+      },
+      {
+        "id": 10,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que instancia EC2 se usa y por que no una t3.micro?",
+        "respuesta": "Se usa una instancia **t3.small** (2 GB RAM) [3].  \n\nNo se usa t3.micro porque su 913 MB de RAM solo dejan ~600 MB libres, y cada una de las tres JVM de Spring Boot que ejecutan los microservicios consume entre 250‑350 MB de RSS, más metaspace, code cache y pilas. Con t3.small los servicios y nginx caben con holgura, además se añadió 2 GB de swap para los picos de compilación [2]."
+      },
+      {
+        "id": 13,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "La base de datos es alcanzable desde internet?",
+        "respuesta": "No. La instancia de base de datos RDS MySQL no es accesible públicamente; solo es reachable dentro de la VPC y está bloqueada desde internet【1†L1-L4】【3†L7-L10】."
+      },
+      {
+        "id": 16,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que flujo de OAuth usa el frontend?",
+        "respuesta": "El frontend de Pedidos360 usa **Microsoft Entra ID** mediante el **flujo Authorization Code con PKCE**, gestionado por la librería MSAL. No se escribe código propio para PKCE; MSAL genera el `code_verifier`, envía su hash como `code_challenge` y lo presenta al canjear el código, evitando que un código interceptado sea útil【2†L1-L4】【3†L1-L5】."
+      },
+      {
+        "id": 19,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que tipo de cliente de Cognito se usa y con que flujo?",
+        "respuesta": "Se usa un **cliente máquina‑a‑máquina** de Cognito configurado con el flujo **client_credentials**【1†L4-L7】【2†L4-L7】."
+      },
+      {
+        "id": 22,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que significa el claim aud de un JWT?",
+        "respuesta": "El claim **`aud`** (audience) identifica a los destinatarios para los que el JWT está destinado. Cada entidad que procese el token debe reconocer su propio identificador dentro de este claim; si no lo encuentra, debe rechazar el token. El valor puede ser una cadena o un arreglo de cadenas sensibles a mayúsculas/minúsculas. [2]"
+      }
+    ]
+  }
+}

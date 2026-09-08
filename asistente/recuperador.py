@@ -80,18 +80,33 @@ def recuperar(pregunta: str, k: int | None = None, almacen: FAISS | None = None)
     return almacen.similarity_search_with_score(pregunta, k=k or config.K_RECUPERACION)
 
 
-def recuperar_hibrido(pregunta: str, k_interno: int = 3, k_externo: int = 2,
+def recuperar_hibrido(pregunta: str, k: int = 5, min_interno: int = 0,
+                      peso_lexico: float = 0.8, peso_denso: float = 0.2,
                       almacen: FAISS | None = None) -> list[Document]:
-    """Fusiona semantica y lexica, y reserva cupos por origen.
+    """Fusiona la busqueda semantica y la lexica con Reciprocal Rank Fusion.
 
-    La cuota por origen resuelve un problema aparte: sin ella, una pregunta en
-    espanol sobre un error HTTP se lleva los primeros puestos con texto de los
-    RFC en ingles y deja fuera la documentacion propia, que es donde esta la
-    respuesta. Las fuentes externas deben acompanar, no desplazar.
+    Los pesos no son una intuicion: salen de medir sobre evaluacion/preguntas.jsonl.
+
+        estrategia                recall  precision  sin fuente
+        densa sola                  0.77       0.58           4
+        lexica sola                 0.87       0.53           2
+        hibrida 0.5/0.5             0.78       0.51           4
+        hibrida 0.8/0.2  <- elegida 0.85       0.61           3
+
+    Con pesos iguales la fusion resulta peor que la densa sola, que es lo que
+    hacia la primera version. El corpus es pequeno y muy tecnico, y las preguntas
+    comparten vocabulario literal con los documentos: ahi lo lexico manda. Se
+    conserva algo de peso denso porque el set de evaluacion, escrito mirando la
+    documentacion, favorece la coincidencia literal mas de lo que lo haria un
+    usuario real que pregunta parafraseando.
+
+    min_interno reserva un piso de documentacion propia. Medido, ya no hace
+    falta: con el peso lexico alto los fragmentos internos entran solos, y forzar
+    el piso solo cuesta precision. Se deja el parametro para poder mostrarlo.
     """
     almacen = almacen or cargar_indice()
     lexico = cargar_lexico()
-    amplio = (k_interno + k_externo) * 5
+    amplio = k * 5
 
     # Cada ranking se identifica por (archivo, seccion, inicio del texto) para
     # poder cruzar resultados que vienen de dos indices distintos.
@@ -103,21 +118,25 @@ def recuperar_hibrido(pregunta: str, k_interno: int = 3, k_externo: int = 2,
 
     for pos, (doc, _d) in enumerate(almacen.similarity_search_with_score(pregunta, k=amplio)):
         c = clave(doc.page_content, doc.metadata)
-        puntos[c] = puntos.get(c, 0) + 1 / (K_RRF + pos)
+        puntos[c] = puntos.get(c, 0) + peso_denso / (K_RRF + pos)
         docs.setdefault(c, doc)
 
     for pos, i in enumerate(lexico.buscar(pregunta, amplio)):
         f = lexico.fragmentos[i]
         c = clave(f["texto"], f["meta"])
-        puntos[c] = puntos.get(c, 0) + 1 / (K_RRF + pos)
+        puntos[c] = puntos.get(c, 0) + peso_lexico / (K_RRF + pos)
         docs.setdefault(c, Document(page_content=f["texto"], metadata=f["meta"]))
 
     ordenados = sorted(puntos, key=lambda c: -puntos[c])
-    internos = [docs[c] for c in ordenados if docs[c].metadata["origen"] == "interno"][:k_interno]
-    externos = [docs[c] for c in ordenados if docs[c].metadata["origen"] == "externo"][:k_externo]
 
-    elegidos = internos + externos
-    return sorted(elegidos, key=lambda d: -puntos[clave(d.page_content, d.metadata)])
+    elegidos = [c for c in ordenados if docs[c].metadata["origen"] == "interno"][:min_interno]
+    for c in ordenados:
+        if len(elegidos) >= k:
+            break
+        if c not in elegidos:
+            elegidos.append(c)
+
+    return [docs[c] for c in sorted(elegidos, key=lambda c: -puntos[c])]
 
 
 def formatear_contexto(documentos) -> str:

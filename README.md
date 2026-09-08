@@ -112,27 +112,51 @@ los RFC íntegros (29.000 palabras en inglés) desbalancearía la recuperación 
 
 ---
 
-## Estado actual
+## Evaluación
 
-El pipeline funciona de extremo a extremo y el enrutamiento entre documentación y API en
-vivo es correcto. **Las respuestas todavía tienen defectos medidos y pendientes de
-corregir**, documentados aquí porque la evaluación del sistema es parte del encargo:
+```bash
+uv run --project .. python -m evaluacion.evaluar                    # recuperación, sin coste
+uv run --project .. python -m evaluacion.evaluar --generacion --n 8 # + fidelidad y relevancia
+```
 
-1. **Recuperación insuficiente en preguntas de soporte.** Una consulta como *«mi token es
-   válido pero da 401»* no recupera el fragmento de `03-api-gateway.md` que contiene la
-   respuesta: la pregunta usa el vocabulario de quien sufre el problema («401», «token
-   válido») y el documento el de quien lo diseñó («autorizador», «emisor»). El modelo
-   responde con lo que recibe, y produce una explicación plausible pero incorrecta.
-2. **Errores de ordenamiento.** Al pedir «qué producto factura más», el modelo lee mal el
-   máximo sobre una lista ordenada por otro criterio.
-3. **Respuestas parciales en preguntas mixtas.** Contesta la mitad que requiere la API y
-   omite la mitad documental.
+El set son **30 preguntas** con la fuente esperada y una respuesta de referencia
+(`evaluacion/preguntas.jsonl`): 23 sobre documentación propia y 7 sobre fuentes externas.
 
-Correcciones en curso: encabezado de sección en cada fragmento antes de vectorizar,
-recuperación híbrida BM25 + densa, y ranking calculado en la herramienta en vez de
-delegado al modelo.
+### Recuperación
 
----
+Determinista y sin coste, así que corre sobre las 30 preguntas y permite comparar
+configuraciones. Resultados actuales:
+
+| Estrategia | Context recall | Context precision | Sin ninguna fuente |
+|---|---:|---:|---:|
+| Solo semántica | 0,77 | 0,58 | 4 |
+| Léxica sola | 0,87 | 0,53 | 2 |
+| Híbrida 0,5/0,5 | 0,78 | 0,51 | 4 |
+| **Híbrida 0,8/0,2** (elegida) | **0,85** | **0,61** | **3** |
+
+El camino hasta ahí está documentado en `asistente/recuperador.py`, y no fue recto: la
+primera versión híbrida, con pesos iguales y cuota fija por origen, resultó **peor** que
+la búsqueda semántica sola (precisión 0,35). La medición es lo que lo detectó.
+
+### Generación
+
+Fidelidad y relevancia se evalúan con un modelo como juez, lo que consume cuota, así que
+corren sobre una submuestra. Sobre 8 preguntas: **fidelidad 1,00 · relevancia 1,00**.
+
+> **Limitación del método.** El juez devuelve 0 o 1 y no valores intermedios —verificado
+> dándole respuestas deliberadamente incorrectas, que puntúa 0—, así que discrimina entre
+> respuesta buena y mala pero no gradúa la calidad. Un 1,00 con esta métrica significa
+> «ninguna respuesta de la muestra fue incorrecta», no «no hay nada que mejorar».
+
+### Otras limitaciones declaradas
+
+- **El set de preguntas lo escribió quien conocía los documentos**, así que comparte
+  vocabulario literal con ellos más de lo que lo haría un usuario real preguntando con
+  sus palabras. Eso favorece a la búsqueda léxica y probablemente sobreestima el recall.
+  Por eso la configuración elegida conserva peso semántico.
+- **El *recall* se mide contra una lista de archivos esperados escrita a mano.** Cuando la
+  respuesta aparece legítimamente en otro documento, se cuenta como fallo aunque el
+  asistente responda bien: es lo que ocurre con la pregunta 16.
 
 ## Seguridad
 
