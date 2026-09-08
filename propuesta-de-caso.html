@@ -1,0 +1,695 @@
+<title>Asistente de Integración Pedidos360</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    --paper:      #F5F6F4;
+    --surface:    #FFFFFF;
+    --surface-2:  #EDEFEC;
+    --ink:        #17202A;
+    --ink-2:      #3D4854;
+    --muted:      #6B7681;
+    --rule:       #D8DCD8;
+    --accent:     #1F6F63;
+    --accent-dim: #E3EDEA;
+    --signal:     #B4472B;
+    --signal-dim: #F6E7E1;
+    --shadow:     0 1px 2px rgba(23,32,42,.05), 0 8px 24px -16px rgba(23,32,42,.25);
+
+    --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --f-body:    "Source Serif 4", Georgia, "Times New Roman", serif;
+    --f-mono:    "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+    --measure: 68ch;
+    --step:    1.25rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #12171C;
+      --surface:    #1A2129;
+      --surface-2:  #212A33;
+      --ink:        #E8EBE8;
+      --ink-2:      #B9C2C9;
+      --muted:      #8A959F;
+      --rule:       #2C363F;
+      --accent:     #5CAE9F;
+      --accent-dim: #1B3934;
+      --signal:     #D9805F;
+      --signal-dim: #38221B;
+      --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #12171C;
+    --surface:    #1A2129;
+    --surface-2:  #212A33;
+    --ink:        #E8EBE8;
+    --ink-2:      #B9C2C9;
+    --muted:      #8A959F;
+    --rule:       #2C363F;
+    --accent:     #5CAE9F;
+    --accent-dim: #1B3934;
+    --signal:     #D9805F;
+    --signal-dim: #38221B;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    max-width: 78ch;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4.5rem) clamp(1.1rem, 4vw, 2.5rem) 5rem;
+  }
+
+  /* ---------- cabecera ---------- */
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: .74rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1.1rem;
+  }
+
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 5.2vw, 3rem);
+    line-height: 1.06;
+    letter-spacing: -.021em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .standfirst {
+    font-size: 1.16rem;
+    color: var(--ink-2);
+    max-width: var(--measure);
+    margin: .9rem 0 0;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 2.2rem;
+    margin-top: 2rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+  }
+  .meta div { display: flex; flex-direction: column; gap: .15rem; }
+  .meta dt {
+    font-family: var(--f-mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .meta dd { margin: 0; font-size: .95rem; }
+
+  /* ---------- avisos ---------- */
+
+  .note {
+    margin: 2.4rem 0 0;
+    padding: 1.15rem 1.35rem;
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    font-size: .95rem;
+    color: var(--ink-2);
+    box-shadow: var(--shadow);
+  }
+  .note strong { color: var(--ink); }
+  .note p { margin: 0; }
+  .note p + p { margin-top: .7rem; }
+
+  /* ---------- tira de hechos verificados ---------- */
+
+  .verified {
+    margin-top: 2.6rem;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 1.3rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1.4rem;
+  }
+  .verified figure { margin: 0; display: flex; flex-direction: column; gap: .2rem; }
+  .verified b {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.65rem;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .verified span {
+    font-family: var(--f-mono);
+    font-size: .69rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ---------- secciones numeradas ---------- */
+
+  section { margin-top: 3.4rem; }
+
+  .head {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr;
+    align-items: baseline;
+    gap: .6rem;
+    padding-bottom: .7rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .head .num {
+    font-family: var(--f-mono);
+    font-size: .74rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    color: var(--accent);
+    padding-top: .3rem;
+  }
+  .head h2 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.32rem;
+    letter-spacing: -.012em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .body { max-width: var(--measure); }
+  .body > * + * { margin-top: var(--step); }
+  .body p { margin: 0; }
+
+  h3 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: .84rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  ul { margin: 0; padding-left: 1.15rem; }
+  li + li { margin-top: .5rem; }
+  li::marker { color: var(--accent); }
+
+  code {
+    font-family: var(--f-mono);
+    font-size: .855em;
+    background: var(--surface-2);
+    padding: .1em .34em;
+    border-radius: 3px;
+  }
+
+  /* ---------- bloque de evidencia ---------- */
+
+  .evidence {
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .evidence header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem .95rem;
+    background: var(--signal-dim);
+    border-bottom: 1px solid var(--rule);
+  }
+  .evidence header span {
+    font-family: var(--f-mono);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--signal);
+  }
+  .evidence pre {
+    margin: 0;
+    padding: .95rem;
+    overflow-x: auto;
+    font-family: var(--f-mono);
+    font-size: .795rem;
+    line-height: 1.75;
+    color: var(--ink-2);
+  }
+  .evidence .bad { color: var(--signal); font-weight: 600; }
+  .evidence .ok  { color: var(--accent); font-weight: 600; }
+  .evidence .dim { color: var(--muted); }
+
+  /* ---------- tablas ---------- */
+
+  .scroll { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+    font-family: var(--f-display);
+    font-weight: 500;
+  }
+  caption {
+    text-align: left;
+    font-family: var(--f-mono);
+    font-size: .68rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: .55rem;
+  }
+  th {
+    text-align: left;
+    font-weight: 600;
+    font-size: .7rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 .8rem .5rem 0;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  td {
+    padding: .55rem .8rem .55rem 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: 0; }
+  .n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tfoot td { font-weight: 600; border-top: 2px solid var(--rule); border-bottom: 0; }
+  .goal {
+    font-family: var(--f-mono);
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* ---------- bloque pendiente del equipo ---------- */
+
+  .pending {
+    border: 1px dashed var(--accent);
+    border-radius: 5px;
+    background: var(--accent-dim);
+    padding: 1.2rem 1.35rem;
+  }
+  .pending > * + * { margin-top: .9rem; }
+  .pending .tag {
+    font-family: var(--f-mono);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pending ol { margin: 0; padding-left: 1.25rem; }
+  .pending ol li + li { margin-top: .45rem; }
+  .pending ol li::marker { font-family: var(--f-mono); font-size: .85em; color: var(--accent); }
+
+  /* ---------- referencias ---------- */
+
+  .refs { display: grid; gap: 1.4rem; max-width: var(--measure); }
+  .refs ul { list-style: none; padding: 0; }
+  .refs li { margin: 0; }
+  .refs li + li { margin-top: .4rem; }
+  .refs .mono {
+    font-family: var(--f-mono);
+    font-size: .78rem;
+    color: var(--ink-2);
+    word-break: break-all;
+  }
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    max-width: var(--measure);
+    font-size: .9rem;
+    color: var(--ink-2);
+  }
+  footer > * + * { margin-top: .85rem; }
+  footer h2 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: .84rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="sheet">
+
+  <p class="eyebrow">Evaluación Parcial N°1 · ISY0101</p>
+  <h1>Asistente de Integración Pedidos360</h1>
+  <p class="standfirst">
+    Propuesta de caso organizacional para el diseño de una solución con LLM y RAG que
+    responda las consultas técnicas de los comercios que se integran a una API B2B con
+    autenticación federada.
+  </p>
+
+  <dl class="meta">
+    <div><dt>Equipo</dt><dd>Ismael Oyarzún · <em>[completar]</em></dd></div>
+    <div><dt>Fecha</dt><dd>Septiembre 2026</dd></div>
+    <div><dt>Indicadores</dt><dd>IL1.1 – IL1.4</dd></div>
+    <div><dt>Estado</dt><dd>Para revisión docente</dd></div>
+  </dl>
+
+  <div class="note">
+    <p><strong>Nota de transparencia.</strong> La organización descrita es un encuadre
+    plausible sobre un sistema <strong>real, construido y desplegado por el equipo</strong>
+    en la asignatura de Cloud. La infraestructura, la documentación y los datos citados
+    existen y fueron verificados contra el sistema en operación; lo que se propone como
+    ficción razonable es la figura de la empresa que lo comercializa.</p>
+    <p>El uso del proyecto como base fue consultado y autorizado por el docente.</p>
+  </div>
+
+  <div class="verified">
+    <figure><b>3</b><span>Microservicios</span></figure>
+    <figure><b>3</b><span>Emisores de identidad</span></figure>
+    <figure><b>6.334</b><span>Palabras de corpus</span></figure>
+    <figure><b>86</b><span>Pedidos operativos</span></figure>
+  </div>
+
+  <!-- 1 -->
+  <section>
+    <div class="head"><span class="num">01</span><h2>La organización</h2></div>
+    <div class="body">
+      <p><strong>Pedidos360</strong> es una PYME tecnológica chilena que ofrece a comercios
+      asociados una plataforma B2B de gestión de pedidos entregada como API. Su propuesta
+      de valor diferenciadora es la <strong>autenticación federada</strong>: cada comercio
+      que se adhiere accede con el Microsoft Entra ID corporativo que ya usa internamente,
+      sin crear ni administrar usuarios nuevos en la plataforma.</p>
+
+      <p>Rubro: software B2B e integración de sistemas. Tamaño: pequeña, con un equipo de
+      ingeniería reducido y sin área de soporte dedicada. La plataforma está operativa.</p>
+
+      <div class="scroll">
+        <table>
+          <caption>Componentes en producción</caption>
+          <thead><tr><th>Servicio</th><th>Rol</th></tr></thead>
+          <tbody>
+            <tr><td><code>ms-auth</code></td><td>Identity Provider OIDC propio, firma RS256</td></tr>
+            <tr><td><code>ms-productos</code></td><td>Catálogo — Resource Server</td></tr>
+            <tr><td><code>ms-pedidos</code></td><td>Gestión de pedidos — Resource Server</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Desplegados sobre <strong>AWS EC2, API Gateway y RDS MySQL</strong>, con frontend
+      Angular. Los Resource Server aceptan simultáneamente tokens de tres emisores —el IdP
+      propio, Amazon Cognito y Microsoft Entra ID— resueltos por el claim <code>iss</code>.</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="head"><span class="num">02</span><h2>El problema</h2></div>
+    <div class="body">
+      <p><strong>El onboarding técnico de cada comercio nuevo consume horas de
+      ingeniería.</strong> Adherirse a Pedidos360 no es copiar una API key. El
+      desarrollador del comercio debe entender qué emisor de identidad le corresponde,
+      cómo obtener un token, qué <em>scopes</em> necesita, cómo se propaga la identidad
+      entre servicios y qué significa cada error.</p>
+
+      <p>Esa información está repartida hoy entre un README, seis documentos técnicos, un
+      CHANGELOG, dos colecciones de API y el código fuente.</p>
+
+      <h3>Evidencia verificada en el sistema en operación</h3>
+
+      <div class="evidence">
+        <header><span>Reproducido contra el entorno productivo</span></header>
+<pre><span class="dim"># Token emitido por el propio ms-auth de Pedidos360</span>
+{
+  "iss":   "https://j37oj1wn16.execute-api…/desarrollo",
+  "aud":   "exp1-api",
+  "scope": "productos.leer pedidos.leer pedidos.escribir"
+}
+
+GET /v1/pedidos     → <span class="bad">HTTP 401 Unauthorized</span>
+
+<span class="dim"># Mismo endpoint, token de Microsoft Entra ID</span>
+GET /v1/pedidos     → <span class="ok">HTTP 200 OK</span></pre>
+      </div>
+
+      <p>El token es válido, tiene el emisor correcto, la audiencia correcta y los
+      <em>scopes</em> necesarios — y aun así es rechazado. La causa es que esa ruta está
+      enlazada al autorizador de Entra ID, mientras el autorizador del IdP propio solo
+      cubre <code>/auth/userinfo</code>. Un desarrollador que se integra no tiene forma
+      razonable de deducirlo: la respuesta exige cruzar la documentación de autenticación
+      con la configuración real del API Gateway.</p>
+
+      <h3>Impacto actual</h3>
+      <ul>
+        <li>Horas de ingeniería desviadas a responder preguntas repetidas de integración.</li>
+        <li>Fricción en la adhesión de comercios nuevos: el tiempo de integración es un
+        costo visible para el cliente y un obstáculo comercial.</li>
+        <li>Conocimiento concentrado en las personas que construyeron el sistema.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="head"><span class="num">03</span><h2>Objetivos de la intervención</h2></div>
+    <div class="body">
+      <p><strong>Objetivo general.</strong> Implementar un asistente conversacional que
+      responda de forma autónoma las consultas técnicas de los desarrolladores que integran
+      sus comercios a Pedidos360, fundamentando cada respuesta en la documentación oficial
+      y en el estado real del sistema.</p>
+
+      <div class="scroll">
+        <table>
+          <caption>Objetivos específicos y medibles</caption>
+          <thead>
+            <tr><th></th><th>Objetivo</th><th>Métrica</th><th class="n">Meta</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>O1</td><td>Cubrir las consultas frecuentes de integración</td><td>Preguntas resueltas sin intervención humana, sobre un set de 30</td><td class="n goal">≥ 85%</td></tr>
+            <tr><td>O2</td><td>Apoyar cada respuesta en las fuentes</td><td><em>Faithfulness</em></td><td class="n goal">≥ 0,80</td></tr>
+            <tr><td>O3</td><td>Entregar respuestas útiles</td><td><em>Answer relevancy</em></td><td class="n goal">≥ 0,80</td></tr>
+            <tr><td>O4</td><td>Recuperar el contexto correcto</td><td><em>Context precision</em> y <em>recall</em></td><td class="n goal">≥ 0,70</td></tr>
+            <tr><td>O5</td><td>Responder sobre datos operativos actuales</td><td>Consultas de estado resueltas contra la API en vivo</td><td class="n goal">≥ 90%</td></tr>
+            <tr><td>O6</td><td>No filtrar información sensible</td><td>Identificadores de infraestructura presentes en las respuestas</td><td class="n goal">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="head"><span class="num">04</span><h2>Datos disponibles</h2></div>
+    <div class="body">
+      <h3>Fuentes internas — documentación propia</h3>
+
+      <div class="scroll">
+        <table>
+          <caption>Corpus documental existente y medido</caption>
+          <thead><tr><th>Documento</th><th class="n">Palabras</th><th>Contenido</th></tr></thead>
+          <tbody>
+            <tr><td><code>README.md</code></td><td class="n">1.236</td><td>Arquitectura, endpoints, emisores, decisiones de diseño</td></tr>
+            <tr><td><code>docs/02-entra-id.md</code></td><td class="n">945</td><td>Configuración del tenant y de las apps</td></tr>
+            <tr><td><code>CHANGELOG.md</code></td><td class="n">810</td><td>Evolución y versionado de la API</td></tr>
+            <tr><td><code>docs/03-api-gateway.md</code></td><td class="n">758</td><td>Rutas, autorizadores, integraciones</td></tr>
+            <tr><td><code>docs/05-base-de-datos.md</code></td><td class="n">637</td><td>Modelo de datos y RDS</td></tr>
+            <tr><td><code>docs/04-despliegue-ec2.md</code></td><td class="n">580</td><td>Despliegue y operación</td></tr>
+            <tr><td><code>docs/06-frontend-angular.md</code></td><td class="n">552</td><td>Integración del frontend con MSAL</td></tr>
+            <tr><td><code>front-angular/README.md</code></td><td class="n">479</td><td>Configuración del cliente</td></tr>
+            <tr><td><code>docs/01-cognito.md</code></td><td class="n">337</td><td>Identity as a Service</td></tr>
+          </tbody>
+          <tfoot><tr><td>Total</td><td class="n">6.334</td><td></td></tr></tfoot>
+        </table>
+      </div>
+
+      <p>Se suman los <strong>contratos de API</strong> (colecciones Postman y Thunder
+      Client) y el <strong>código fuente Java</strong> de los tres microservicios, del que
+      se extraen los <em>scopes</em> que exige cada endpoint.</p>
+
+      <h3>Fuentes internas — datos operativos en vivo</h3>
+      <p>Consultables vía API autenticada, verificados al momento de escribir esta propuesta:</p>
+
+      <div class="scroll">
+        <table>
+          <caption>Catálogo y pedidos del comercio principal</caption>
+          <thead><tr><th>Producto</th><th class="n">Pedidos</th><th class="n">Unidades</th><th class="n">Monto</th></tr></thead>
+          <tbody>
+            <tr><td>Mouse inalámbrico</td><td class="n">25</td><td class="n">70</td><td class="n">$1.399.300</td></tr>
+            <tr><td>Teclado mecánico</td><td class="n">16</td><td class="n">33</td><td class="n">$1.517.670</td></tr>
+            <tr><td>Audífonos con cancelación de ruido</td><td class="n">9</td><td class="n">17</td><td class="n">$1.529.830</td></tr>
+            <tr><td>Monitor 27 pulgadas</td><td class="n">6</td><td class="n">9</td><td class="n">$1.709.910</td></tr>
+          </tbody>
+          <tfoot><tr><td>Total</td><td class="n">56</td><td class="n">129</td><td class="n">$6.156.710</td></tr></tfoot>
+        </table>
+      </div>
+
+      <p>Un segundo comercio suma otros 30 pedidos, para un total de 86 registros. El
+      producto más pedido no es el que más factura: una conclusión que no está escrita en
+      ningún documento y solo se obtiene consultando el sistema.</p>
+
+      <h3>Fuentes externas</h3>
+      <ul>
+        <li><strong>RFC 6749</strong> (OAuth 2.0) y <strong>RFC 7519</strong> (JSON Web Token).</li>
+        <li>Documentación oficial de Microsoft Entra ID, AWS API Gateway y Spring Security.</li>
+        <li>OWASP API Security Top 10.</li>
+        <li>Ley 19.628 sobre protección de la vida privada.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="head"><span class="num">05</span><h2>Restricciones y requerimientos</h2></div>
+    <div class="body">
+      <h3>Normativas y de privacidad</h3>
+      <ul>
+        <li><strong>Ley 19.628.</strong> La tabla de pedidos asocia cada registro al
+        identificador del sujeto autenticado. El asistente debe operar sobre datos del
+        comercio consultante y no exponer información de otros.</li>
+        <li><strong>Aislamiento por identidad.</strong> El endpoint filtra por el
+        <code>sub</code> del token; el asistente debe propagar la identidad del solicitante
+        y nunca consultar con un token privilegiado en nombre de un tercero.</li>
+      </ul>
+
+      <h3>Seguridad del propio asistente</h3>
+      <ul>
+        <li>El corpus interno contiene identificadores de infraestructura —ID de instancia
+        EC2, tenant de Entra ID, endpoints internos, credenciales de usuarios de prueba—.
+        El sistema debe incorporar un guardrail que impida su aparición en las respuestas.</li>
+      </ul>
+
+      <h3>Técnicas y de plataforma</h3>
+      <ul>
+        <li><strong>Cuota del proveedor de LLM.</strong> Groq, capa gratuita: 200.000
+        tokens diarios. Obliga a usar el modelo rápido en tareas de alto volumen y a acotar
+        el tamaño del contexto.</li>
+        <li><strong>Sin endpoint de embeddings.</strong> El proveedor no los ofrece, por lo
+        que se usa un modelo multilingüe local
+        (<code>paraphrase-multilingual-MiniLM-L12-v2</code>), sin costo y offline.</li>
+        <li><strong>Infraestructura efímera.</strong> El entorno AWS es un laboratorio
+        académico y la IP pública cambia en cada reinicio. La URL de la API se parametriza
+        por variable de entorno, con un despliegue local equivalente vía Docker Compose
+        como alternativa.</li>
+        <li><strong>Limitación conocida de los datos.</strong> La API fija la fecha de
+        creación en el instante de la petición y no admite datos retroactivos, por lo que
+        los pedidos de demostración comparten marca temporal. Esto acota el análisis de
+        series de tiempo.</li>
+      </ul>
+
+      <h3>Alcance</h3>
+      <ul>
+        <li>El asistente <strong>no modifica</strong> Pedidos360. Lo consume como cualquier
+        comercio integrado, autenticándose por el mismo mecanismo OAuth 2.0.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section>
+    <div class="head"><span class="num">06</span><h2>Motivación para usar agentes, LLM y RAG</h2></div>
+    <div class="body">
+      <div class="pending">
+        <p class="tag">Pendiente · lo redacta el equipo</p>
+        <p>La pauta prohíbe expresamente el uso de IA para escribir justificaciones
+        técnicas. Quedan ordenados abajo los hechos verificados y las preguntas que la
+        justificación debe responder, para construir el argumento con palabras propias.</p>
+
+        <h3>Hechos disponibles para argumentar</h3>
+        <ul>
+          <li>El conocimiento está disperso en unas 6.300 palabras de documentación, más
+          código y contratos de API.</li>
+          <li>Hay preguntas cuya respuesta <strong>no está escrita en ningún documento</strong>
+          y exigen cruzar dos fuentes — el caso del 401 del apartado 02.</li>
+          <li>Hay preguntas que <strong>no se pueden responder con documentos</strong>,
+          porque dependen del estado actual del sistema.</li>
+          <li>La documentación cambia con cada versión: un modelo sin acceso a fuentes
+          quedaría desactualizado y no podría citar en qué se basa.</li>
+        </ul>
+
+        <h3>Preguntas que la justificación debe responder</h3>
+        <ol>
+          <li>¿Por qué RAG y no un LLM respondiendo de memoria? Pensar en trazabilidad, en
+          poder citar la fuente y en el costo de una respuesta inventada sobre autenticación.</li>
+          <li>¿Por qué hace falta un agente con herramientas y no solo recuperación documental?</li>
+          <li>¿Por qué combinar fuentes internas y externas en vez de usar solo las propias?</li>
+          <li>¿Qué gana la organización que no ganaría con un buscador o un FAQ estático?</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section>
+    <div class="head"><span class="num">07</span><h2>Referencias y anexos</h2></div>
+    <div class="refs">
+      <div>
+        <h3>Repositorios del sistema base</h3>
+        <ul>
+          <li>Microservicios · <span class="mono">github.com/1samadhi/cloud-exp1-oidc</span></li>
+          <li>Frontend · <span class="mono">github.com/1samadhi/cloud-exp1-front-angular</span></li>
+          <li><em>[Pendiente]</em> Repositorio del asistente, entregable de esta evaluación.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Sistema en operación</h3>
+        <ul>
+          <li>API Gateway, stage <code>desarrollo</code><br>
+          <span class="mono">https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Documentos del curso</h3>
+        <ul>
+          <li>Pauta EP1 — ISY0101, Subdirección de Diseño Instruccional.</li>
+          <li>Materiales RA1, indicadores IL1.1 a IL1.4.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Normativa y estándares</h3>
+        <ul>
+          <li>Ley 19.628 sobre Protección de la Vida Privada.</li>
+          <li>RFC 6749 — <em>The OAuth 2.0 Authorization Framework</em>.</li>
+          <li>RFC 7519 — <em>JSON Web Token</em>.</li>
+          <li>OWASP API Security Top 10.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <h2>Declaración de uso de Inteligencia Artificial</h2>
+    <p><em>[Ajustar antes de entregar, según lo que efectivamente se use.]</em></p>
+    <p>En la elaboración de este proyecto se utilizó <strong>Claude (Anthropic)</strong>
+    como herramienta de apoyo para: análisis de la pauta de evaluación, inventario de la
+    documentación existente, generación del script de poblamiento de datos de demostración,
+    estructuración de este documento y elaboración de diagramas.</p>
+    <p><strong>No se utilizó IA</strong> para la redacción de la justificación de decisiones
+    técnicas (apartado 06), las conclusiones ni las reflexiones individuales, conforme a las
+    indicaciones de la pauta. Todo contenido generado con apoyo de IA fue revisado y validado
+    por el equipo.</p>
+    <p>Referencia de citación · <a href="https://bibliotecas.duoc.cl/ia">bibliotecas.duoc.cl/ia</a></p>
+  </footer>
+
+</div>

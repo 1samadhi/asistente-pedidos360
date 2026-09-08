@@ -1,0 +1,3 @@
+# El indice se reconstruye con: python -m asistente.ingesta
+indice/
+__pycache__/
