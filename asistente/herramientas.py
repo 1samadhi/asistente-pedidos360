@@ -71,6 +71,13 @@ def consultar_catalogo() -> str:
 
 
 def consultar_pedidos() -> str:
+    """Resumen de los pedidos del comercio, con los rankings ya calculados.
+
+    El ordenamiento se hace aqui y no se delega al modelo. Medido: entregandole
+    una lista ordenada por cantidad de pedidos y pidiendole "cual factura mas",
+    el modelo devolvia el primero de la lista en vez del maximo por monto. Un
+    LLM no es una calculadora; lo que se puede computar, se computa.
+    """
     try:
         pedidos = _get("/v1/pedidos")
         productos = {p["id"]: p for p in _get("/v1/productos")}
@@ -85,12 +92,34 @@ def consultar_pedidos() -> str:
         r["pedidos"] += 1
         r["unidades"] += p["cantidad"]
 
-    lineas, total = [], 0
-    for pid, r in sorted(resumen.items(), key=lambda kv: -kv[1]["pedidos"]):
+    filas = []
+    for pid, r in resumen.items():
         prod = productos.get(pid, {"nombre": f"producto {pid}", "precio": 0})
-        monto = r["unidades"] * prod["precio"]
-        total += monto
-        lineas.append(f"- {prod['nombre']}: {r['pedidos']} pedidos, "
-                      f"{r['unidades']} unidades, ${monto:,}".replace(",", "."))
-    return (f"Pedidos del comercio ({len(pedidos)} en total):\n" + "\n".join(lineas)
-            + f"\nMonto total: ${total:,}".replace(",", "."))
+        filas.append({
+            "nombre": prod["nombre"],
+            "pedidos": r["pedidos"],
+            "unidades": r["unidades"],
+            "monto": r["unidades"] * prod["precio"],
+        })
+
+    def pesos(n):
+        return f"${n:,}".replace(",", ".")
+
+    total = sum(f["monto"] for f in filas)
+    por_monto = sorted(filas, key=lambda f: -f["monto"])
+    por_pedidos = sorted(filas, key=lambda f: -f["pedidos"])
+
+    lineas = [f"Pedidos del comercio: {len(pedidos)} en total, {pesos(total)} facturados.",
+              "",
+              "Ranking por facturacion (de mayor a menor):"]
+    for i, f in enumerate(por_monto, 1):
+        lineas.append(f"  {i}. {f['nombre']}: {pesos(f['monto'])} "
+                      f"({f['unidades']} unidades en {f['pedidos']} pedidos)")
+    lineas += ["", "Ranking por cantidad de pedidos (de mayor a menor):"]
+    for i, f in enumerate(por_pedidos, 1):
+        lineas.append(f"  {i}. {f['nombre']}: {f['pedidos']} pedidos")
+    lineas += ["",
+               f"El que MAS FACTURA es {por_monto[0]['nombre']} con {pesos(por_monto[0]['monto'])}.",
+               f"El MAS PEDIDO es {por_pedidos[0]['nombre']} con {por_pedidos[0]['pedidos']} pedidos.",
+               "Usa estos rankings tal como estan; no los recalcules."]
+    return "\n".join(lineas)

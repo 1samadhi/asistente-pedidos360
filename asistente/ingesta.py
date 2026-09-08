@@ -7,10 +7,15 @@ debe poder decir si una respuesta viene de la documentacion propia de Pedidos360
 o de una fuente externa (RFC, OWASP), porque la confianza que merece cada una
 es distinta.
 """
+import json
+
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import (
+    MarkdownHeaderTextSplitter,
+    RecursiveCharacterTextSplitter,
+)
 
 from asistente import config
 
@@ -47,14 +52,39 @@ def cargar_documentos() -> list[Document]:
 
 
 def trocear(docs: list[Document]) -> list[Document]:
-    # Separadores en orden de preferencia: cortar por encabezado markdown antes
-    # que por parrafo conserva el contexto de la seccion dentro del fragmento.
+    """Trocea en dos pasos y antepone el contexto a cada fragmento.
+
+    Medido en la primera version: un fragmento tomado de la mitad de
+    03-api-gateway.md no menciona en su texto ni "API Gateway" ni la seccion a
+    la que pertenece, asi que su vector no se parece a una pregunta que use esas
+    palabras. Al vectorizar el fragmento precedido de su documento y su seccion,
+    el encabezado viaja dentro del embedding y esas preguntas lo alcanzan.
+    """
+    por_encabezado = MarkdownHeaderTextSplitter(
+        headers_to_split_on=[("#", "h1"), ("##", "h2"), ("###", "h3")],
+        strip_headers=False,
+    )
     divisor = RecursiveCharacterTextSplitter(
         chunk_size=config.TAMANO_CHUNK,
         chunk_overlap=config.SOLAPE_CHUNK,
-        separators=["\n## ", "\n### ", "\n\n", "\n", " ", ""],
+        separators=["\n\n", "\n", " ", ""],
     )
-    return divisor.split_documents(docs)
+
+    trozos = []
+    for doc in docs:
+        for seccion in por_encabezado.split_text(doc.page_content):
+            ruta = " > ".join(
+                seccion.metadata[h] for h in ("h1", "h2", "h3") if h in seccion.metadata
+            )
+            for parte in divisor.split_text(seccion.page_content):
+                meta = dict(doc.metadata)
+                meta["seccion"] = ruta or doc.metadata["titulo"]
+                cabecera = f"{doc.metadata['titulo']} — {meta['seccion']}"
+                trozos.append(Document(
+                    page_content=f"{cabecera}\n\n{parte}",
+                    metadata=meta,
+                ))
+    return trozos
 
 
 def construir():
@@ -68,6 +98,13 @@ def construir():
     almacen = FAISS.from_documents(trozos, embeddings())
     config.INDICE.mkdir(parents=True, exist_ok=True)
     almacen.save_local(str(config.INDICE))
+
+    # El recuperador lexico necesita los fragmentos en texto plano; se guardan
+    # junto al indice para no volver a trocear en cada consulta.
+    with open(config.INDICE / "fragmentos.json", "w", encoding="utf-8") as fh:
+        json.dump([{"texto": t.page_content, "meta": t.metadata} for t in trozos],
+                  fh, ensure_ascii=False)
+
     print(f"\nIndice guardado en {config.INDICE}")
     return almacen
 

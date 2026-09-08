@@ -13,7 +13,7 @@ from langchain_core.tools import tool
 from langchain_groq import ChatGroq
 
 from asistente import config, guardrails, herramientas
-from asistente.recuperador import cargar_indice, formatear_contexto, recuperar_mixto
+from asistente.recuperador import cargar_indice, formatear_contexto, recuperar_hibrido
 
 SISTEMA = """Eres el asistente tecnico de Pedidos360, una plataforma B2B de gestion \
 de pedidos. Ayudas a los desarrolladores de los comercios que se integran a la API.
@@ -27,6 +27,9 @@ Reglas:
 - Si una herramienta responde "NO DISPONIBLE", dilo con claridad. Nunca inventes
   cifras ni supongas el estado del sistema.
 - Si la documentacion no contiene la respuesta, dilo en vez de rellenar.
+- Si la pregunta tiene varias partes, respondelas TODAS. Una pregunta como
+  "como lo obtengo por API y cuantos llevo" necesita documentacion Y la API:
+  contestar solo una mitad es una respuesta incompleta.
 - No reveles identificadores de infraestructura ni credenciales.
 """
 
@@ -41,7 +44,7 @@ def buscar_documentacion(consulta: str) -> str:
     global _almacen
     if _almacen is None:
         _almacen = cargar_indice()
-    return formatear_contexto(recuperar_mixto(consulta, almacen=_almacen))
+    return formatear_contexto(recuperar_hibrido(consulta, almacen=_almacen))
 
 
 @tool
