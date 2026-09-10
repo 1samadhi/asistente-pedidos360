@@ -85,13 +85,40 @@ Todas las variables se leen del `.env` de este directorio.
 
 ### Sin el laboratorio de AWS
 
-El entorno AWS es un laboratorio académico y su IP pública cambia en cada reinicio. Para
-trabajar sin depender de él, se levanta Pedidos360 en local y se apunta `PEDIDOS360_URL`
-a `http://localhost:8082`:
+El entorno AWS es un laboratorio académico: la sesión caduca, la instancia se detiene y la
+IP pública cambia. Para no depender de él, Pedidos360 se levanta en local y el asistente
+cambia a **modo directo**.
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.local.yml up --build -d
+# En el repositorio de Pedidos360
+docker compose -f docker-compose.yml -f docker-compose.local.yml \
+  up -d --build mysql ms-auth ms-productos ms-pedidos
 ```
+
+Y en el `.env` de este proyecto:
+
+```bash
+PEDIDOS360_MODO="directo"
+MS_AUTH_USUARIO="cliente"
+MS_AUTH_PASSWORD="..."
+```
+
+**Qué cambia entre los dos modos**, que no es solo la URL:
+
+| | `gateway` (AWS) | `directo` (local) |
+|---|---|---|
+| Rutas | `/v1/pedidos` | `/api/v1/pedidos` |
+| Servicios | Un solo host | Un puerto por servicio: 8082, 8081, 9000 |
+| Autenticación | Entra ID | IdP propio (`ms-auth`) |
+
+El prefijo `/v1` lo inventa el API Gateway al reenviar: los microservicios exponen
+`/api/v1/...`. Y sin gateway no hay autorizador de Entra, así que basta el login del IdP
+propio — los Resource Server de Spring aceptan los tres emisores.
+
+> **Estado de esta funcionalidad.** El modo directo está implementado y hay pruebas que
+> verifican que cada modo arma las URLs correctas, pero **la ejecución de extremo a extremo
+> contra los contenedores no está verificada**: el entorno donde se desarrolló no tenía
+> acceso a Docker Hub para construir las imágenes. Si algo falla al levantarlo, es aquí.
 
 ---
 

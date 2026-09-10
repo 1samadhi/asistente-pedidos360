@@ -19,17 +19,35 @@ class ApiNoDisponible(RuntimeError):
     pass
 
 
-def _token() -> str:
-    """Token de Entra ID.
+def _token_ms_auth() -> str:
+    """Login del IdP propio. Solo sirve en modo directo, sin gateway de por medio.
 
-    Las rutas de negocio del API Gateway estan enlazadas al autorizador de Entra,
-    no al del IdP propio de Pedidos360: un token de ms-auth, aun siendo valido,
-    recibe 401 en /v1/pedidos.
+    Los Resource Server de Spring aceptan los tres emisores; el que rechaza el
+    token de ms-auth es el autorizador del gateway, que aqui no interviene.
     """
+    cuerpo = json.dumps({"username": config.MS_AUTH_USUARIO,
+                         "password": config.MS_AUTH_PASSWORD}).encode()
+    peticion = urllib.request.Request(
+        f"{config.URL_AUTH}/auth/login", data=cuerpo,
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(peticion, timeout=30) as r:
+            return json.load(r)["access_token"]
+    except Exception as exc:
+        raise ApiNoDisponible(f"No se pudo obtener el token del IdP propio: {exc}") from exc
+
+
+def _token() -> str:
+    """Token para llamar la API, del emisor que corresponda al modo."""
     if "valor" in _token_cache:
         return _token_cache["valor"]
     if not config.hay_credenciales_api():
-        raise ApiNoDisponible("No hay credenciales de Entra ID configuradas.")
+        falta = ("MS_AUTH_PASSWORD" if config.MODO_API == "directo"
+                 else "las credenciales de Entra ID")
+        raise ApiNoDisponible(f"No hay {falta} configuradas.")
+    if config.MODO_API == "directo":
+        _token_cache["valor"] = _token_ms_auth()
+        return _token_cache["valor"]
     datos = urllib.parse.urlencode({
         "client_id": config.ENTRA_CLIENT_ID,
         "scope": f"{config.ENTRA_APP_ID_URI}/.default",
@@ -46,9 +64,11 @@ def _token() -> str:
     return _token_cache["valor"]
 
 
-def _get(ruta: str):
+def _get(ruta: str, base: str | None = None):
+    # El prefijo cambia con el modo: /v1 a traves del gateway, /api/v1 directo
+    # contra el microservicio, que es su ruta real.
     peticion = urllib.request.Request(
-        f"{config.PEDIDOS360_URL}{ruta}",
+        f"{base or config.URL_PEDIDOS}{config.PREFIJO}{ruta}",
         headers={"Authorization": f"Bearer {_token()}"},
     )
     try:
@@ -62,7 +82,7 @@ def _get(ruta: str):
 
 def consultar_catalogo() -> str:
     try:
-        productos = _get("/v1/productos")
+        productos = _get("/productos", config.URL_PRODUCTOS)
     except ApiNoDisponible as exc:
         return f"NO DISPONIBLE: {exc} No inventes datos; dilo al usuario."
     lineas = [f"- id {p['id']}: {p['nombre']} — ${p['precio']:,}".replace(",", ".")
@@ -79,8 +99,8 @@ def consultar_pedidos() -> str:
     LLM no es una calculadora; lo que se puede computar, se computa.
     """
     try:
-        pedidos = _get("/v1/pedidos")
-        productos = {p["id"]: p for p in _get("/v1/productos")}
+        pedidos = _get("/pedidos")
+        productos = {p["id"]: p for p in _get("/productos", config.URL_PRODUCTOS)}
     except ApiNoDisponible as exc:
         return f"NO DISPONIBLE: {exc} No inventes datos; dilo al usuario."
     if not pedidos:

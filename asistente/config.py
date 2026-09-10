@@ -31,22 +31,39 @@ TAMANO_CHUNK_EXTERNO = int(os.getenv("TAMANO_CHUNK_EXTERNO", "1600"))
 K_RECUPERACION = int(os.getenv("K_RECUPERACION", "5"))
 
 # --- API de Pedidos360 ---
-# Por defecto el despliegue en AWS; para trabajar sin lab, apuntar a localhost
-# levantando Pedidos360 con docker-compose.local.yml.
-PEDIDOS360_URL = os.getenv(
-    "PEDIDOS360_URL",
-    "https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo",
-).rstrip("/")
+# Dos modos, porque la API se ve distinta segun por donde se entre:
+#
+#   gateway  (por defecto)  AWS API Gateway unifica los microservicios en un solo
+#                           host y publica las rutas como /v1/...
+#   directo                 Sin gateway: cada microservicio en su propio puerto y
+#                           con su prefijo real /api/v1/... Es lo que hay al
+#                           levantar Pedidos360 en local con Docker, y sirve para
+#                           trabajar sin depender del laboratorio de AWS.
+MODO_API = os.getenv("PEDIDOS360_MODO", "gateway").lower()
 
-# Credenciales de Entra ID: las rutas de negocio del API Gateway estan enlazadas
+if MODO_API == "directo":
+    PREFIJO = "/api/v1"
+    URL_PEDIDOS = os.getenv("PEDIDOS360_PEDIDOS_URL", "http://localhost:8082").rstrip("/")
+    URL_PRODUCTOS = os.getenv("PEDIDOS360_PRODUCTOS_URL", "http://localhost:8081").rstrip("/")
+    URL_AUTH = os.getenv("PEDIDOS360_AUTH_URL", "http://localhost:9000").rstrip("/")
+else:
+    PREFIJO = "/v1"
+    _base = os.getenv(
+        "PEDIDOS360_URL",
+        "https://j37oj1wn16.execute-api.us-east-1.amazonaws.com/desarrollo",
+    ).rstrip("/")
+    URL_PEDIDOS = URL_PRODUCTOS = URL_AUTH = _base
+
+PEDIDOS360_URL = URL_PEDIDOS  # compatibilidad con los scripts existentes
+
+# Credenciales del IdP propio, para el modo directo. Los Resource Server de
+# Spring aceptan los tres emisores, asi que sin el gateway de por medio basta con
+# el login de ms-auth y no hace falta Entra ID.
+MS_AUTH_USUARIO = os.getenv("MS_AUTH_USUARIO", "cliente")
+MS_AUTH_PASSWORD = os.getenv("MS_AUTH_PASSWORD", "")
+
+# Credenciales de Entra ID: en modo gateway, las rutas de negocio estan enlazadas
 # al autorizador de Entra, no al del IdP propio.
-ENTRA_TENANT_ID = os.getenv("ENTRA_TENANT_ID", "")
-ENTRA_CLIENT_ID = os.getenv("ENTRA_CLIENT_ID", "")
-ENTRA_APP_ID_URI = os.getenv("ENTRA_APP_ID_URI", "")
-ENTRA_USUARIO = os.getenv("ENTRA_USUARIO_CLIENTE", "")
-ENTRA_PASSWORD = os.getenv("ENTRA_PASSWORD_CLIENTE", "")
-
-
 # --- LangSmith: trazas de cada ejecucion (opcional) ---
 # LangChain envia las trazas solo, leyendo estas variables. No hace falta tocar
 # el codigo del agente.
@@ -82,5 +99,7 @@ def estado_trazas() -> str:
 
 def hay_credenciales_api() -> bool:
     """Sin credenciales el asistente sigue respondiendo, pero solo con documentos."""
+    if MODO_API == "directo":
+        return bool(MS_AUTH_PASSWORD)
     return all([ENTRA_TENANT_ID, ENTRA_CLIENT_ID, ENTRA_APP_ID_URI,
                 ENTRA_USUARIO, ENTRA_PASSWORD])
