@@ -60,7 +60,8 @@ def diagnostico(codigo: int, ruta: str) -> str:
     if codigo == 200:
         return ""
     if codigo == 0:
-        return "sin respuesta: revisar si el API Gateway existe y hay red"
+        return ("sin respuesta: la instancia puede estar apagada, o el stage del "
+                "API Gateway ya no existir. Revisar tambien que haya red")
     if codigo == 503:
         return ("el gateway responde pero la integracion no: la EC2 probablemente "
                 "cambio de IP publica -> scripts/actualizar-api-gateway.sh")
@@ -78,6 +79,14 @@ def main() -> int:
     print("Verificacion de la API de Pedidos360")
     print(f"Base: {config.PEDIDOS360_URL}\n")
 
+    # Antes de culpar a la red, descartar lo mas probable: que el .env siga con
+    # el valor de ejemplo. Un reporte que manda a revisar AWS cuando lo que falta
+    # es rellenar una variable hace perder el tiempo a quien lo recibe.
+    if "TU-API" in config.PEDIDOS360_URL or not config.PEDIDOS360_URL:
+        print("PEDIDOS360_URL sigue con el valor de ejemplo del .env.example.")
+        print("Completa esa variable con la URL real del stage antes de verificar.")
+        return 1
+
     fallos = []
     print("Rutas publicas")
     for ruta in PUBLICAS:
@@ -91,7 +100,10 @@ def main() -> int:
     token, error = token_entra()
     if not token:
         print(f"  no se pudieron probar: {error}")
-        fallos.append(("token de Entra", 0))
+        # Faltar credenciales no es un fallo de la API: no tiene nada que
+        # reportarle a quien la mantiene.
+        if "sin credenciales" not in error:
+            fallos.append(("token de Entra", 0))
     else:
         print(f"  token de Entra obtenido ({len(token)} caracteres)")
         cab = {"Authorization": f"Bearer {token}"}
