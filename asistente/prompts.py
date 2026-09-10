@@ -7,8 +7,8 @@ lo que cambia es como se le pide al modelo que llegue a la respuesta.
     B  few-shot: las mismas reglas mas dos ejemplos resueltos.
     C  chain-of-thought: las reglas mas un procedimiento de razonamiento previo.
 
-Se miden con evaluacion/comparar_prompts.py, con el mismo juez graduado, la
-misma submuestra y la misma recuperacion: lo unico que cambia es el prompt.
+Se midieron con el mismo juez graduado, la misma submuestra y la misma
+recuperacion: lo unico que cambiaba era el prompt.
 
     variante              fidelidad  relevancia  media
     A zero-shot  <- en uso     1.00        1.00   1.00

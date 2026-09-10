@@ -2,9 +2,8 @@
 
     uv run --no-project --with python-pptx python scripts/generar_ppt.py
 
-Se genera con codigo y no a mano para que las cifras salgan de evaluacion/
-resultados.json y no de la memoria de nadie: si se vuelve a medir, se regenera
-la presentacion y los numeros siguen siendo ciertos.
+Se genera con codigo y no a mano para que las cifras salgan de la medicion
+guardada en entrega/resultados-medidos.json y no de la memoria de nadie.
 
 Las notas del orador son PREGUNTAS, no un guion. La pauta prohibe que la IA
 redacte justificaciones tecnicas; el argumento hablado lo pone el equipo.
@@ -72,7 +71,7 @@ def imagen_centrada(slide, ruta, arriba, ancho_max=Inches(12.3)):
 
 
 def main():
-    datos = json.loads((RAIZ / "evaluacion" / "resultados.json").read_text(encoding="utf-8"))
+    datos = json.loads((RAIZ / "entrega" / "resultados-medidos.json").read_text(encoding="utf-8"))
     rec = datos["recuperacion"]
     gen = datos.get("generacion", {})
 

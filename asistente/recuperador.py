@@ -88,7 +88,7 @@ def cargar_lexico() -> RecuperadorLexico:
 
 
 def recuperar(pregunta: str, k: int | None = None, almacen: FAISS | None = None):
-    """Recuperacion solo semantica. Se mantiene para poder comparar en la evaluacion."""
+    """Recuperacion solo semantica. Se mantiene para poder comparar estrategias."""
     almacen = almacen or cargar_indice()
     return almacen.similarity_search_with_score(pregunta, k=k or config.K_RECUPERACION)
 
@@ -99,7 +99,7 @@ def recuperar_hibrido(pregunta: str, k: int | None = None, min_interno: int = 0,
                       almacen: FAISS | None = None) -> list[Document]:
     """Fusiona la busqueda semantica y la lexica con Reciprocal Rank Fusion.
 
-    Los pesos no son una intuicion: salen de medir sobre evaluacion/preguntas.jsonl.
+    Los pesos no son una intuicion: salen de medir sobre un set de 30 preguntas.
 
         estrategia                recall  precision  sin fuente
         densa sola                  0.78       0.59           3

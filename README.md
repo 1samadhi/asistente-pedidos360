@@ -38,6 +38,12 @@ API key y funcionan sin conexión. La primera ejecución descarga ~470 MB y los 
 
 ---
 
+## Pruebas
+
+```bash
+uv run --extra dev python -m pytest tests/ -q
+```
+
 ## Dos formas de usarlo
 
 **`recorrido.ipynb`** — el notebook de demostración. Recorre el sistema pieza por pieza:
@@ -140,15 +146,7 @@ asistente/         El sistema
 corpus/            Los datos que el sistema consulta
   interno/           Documentación de Pedidos360 · 11 archivos, 7.693 palabras
   externo/           RFC 6749, RFC 7519 y OWASP API Top 10
-evaluacion/        Cómo se comprueba que funciona
-  preguntas.jsonl        Set de 30 preguntas con fuente y respuesta de referencia
-  evaluar.py             Métricas de recuperación y de generación
-  comparar_prompts.py    Compara las variantes de prompt
-  calibrar_juez.py       Verifica que la rúbrica del juez discrimina
-  test_guardrails.py     Pruebas del filtro de salida
-  test_modos_api.py      Pruebas de los modos gateway y directo
-  capturar_evidencia.py  Ejecuta las pruebas y guarda su salida fechada
-  evidencias/            Salidas guardadas como evidencia
+tests/             Pruebas del sistema
 docs/              Documentación del sistema
   arquitectura.svg                       Diagrama de la solución
   boceto-secuencia-consulta-mixta.svg    Cómo se resuelve una consulta mixta
@@ -170,61 +168,6 @@ los RFC íntegros (29.000 palabras en inglés) desbalancearía la recuperación 
 7.693 palabras de documentación propia en español.
 
 ---
-
-## Evaluación
-
-```bash
-uv run python -m evaluacion.evaluar                    # recuperación, sin coste
-uv run python -m evaluacion.evaluar --generacion --n 30 # + fidelidad y relevancia
-```
-
-El set son **30 preguntas** con la fuente esperada y una respuesta de referencia
-(`evaluacion/preguntas.jsonl`): 23 sobre documentación propia y 7 sobre fuentes externas.
-
-### Recuperación
-
-Determinista y sin coste, así que corre sobre las 30 preguntas y permite comparar
-configuraciones. Resultados actuales:
-
-| Estrategia | Context recall | Context precision | Sin ninguna fuente |
-|---|---:|---:|---:|
-| Solo semántica | 0,80 | 0,58 | 2 |
-| Híbrida 0,5/0,5 | 0,78 | 0,51 | 4 |
-| **Híbrida 0,8/0,2 con tope por archivo** | **0,92** | **0,45** | **0** |
-
-La precisión se lee contra su techo: con `k=5` y un tope de dos fragmentos por archivo,
-una pregunta con una sola fuente esperada no puede pasar de 2/5. El máximo alcanzable
-sobre el set es 0,55, así que 0,45 es el 82% de lo posible.
-
-El camino hasta ahí está documentado en `asistente/recuperador.py`, y no fue recto: la
-primera versión híbrida, con pesos iguales y cuota fija por origen, resultó **peor** que
-la búsqueda semántica sola (precisión 0,35). La medición es lo que lo detectó.
-
-### Generación
-
-Fidelidad y relevancia se evalúan con un modelo como juez, con una rúbrica de cinco
-niveles. Sobre las 30 preguntas: **fidelidad 0,95 · relevancia 0,98**, con 26 respuestas de
-fidelidad perfecta y las 30 por encima de 0,75 de relevancia.
-
-`python -m evaluacion.calibrar_juez` verifica que la rúbrica discrimina antes de usarla:
-le da cuatro respuestas construidas a propósito —correcta, incompleta, con un dato
-inventado y falsa— y exige que las ordene.
-
-> **Medir de más importa.** Sobre una muestra de 8 preguntas la fidelidad daba 1,00. Al
-> ampliar a las 30 bajó a 0,88, revelando tres respuestas correctas pero **no
-> fundamentadas**: el modelo las sabía de memoria y el contexto recuperado no las
-> respaldaba, porque el troceo cortaba las listas de los RFC. Corregido eso, 0,95.
-
-### Otras limitaciones declaradas
-
-- **El set de preguntas lo escribió quien conocía los documentos**, así que comparte
-  vocabulario literal con ellos más de lo que lo haría un usuario real preguntando con
-  sus palabras. Eso favorece a la búsqueda léxica y probablemente sobreestima el recall.
-  Por eso la configuración elegida conserva peso semántico.
-- **El *recall* se mide contra una lista de archivos esperados escrita a mano**, que
-  también puede equivocarse: una respuesta de referencia afirmaba que el puerto 22 estaba
-  cerrado cuando la documentación dice lo contrario, y penalizaba al asistente por
-  acertar. Conviene revisar los desacuerdos antes de creerle al set.
 
 ## Trazas con LangSmith (opcional)
 

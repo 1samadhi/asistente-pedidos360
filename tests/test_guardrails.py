@@ -6,7 +6,7 @@ comprueban tres cosas: que cada patron se aplica, que el texto legitimo no se
 toca, y que el riesgo es real, es decir que el corpus contiene efectivamente
 datos de este tipo que la recuperacion puede traer.
 
-    pytest evaluacion/
+    pytest tests/
 """
 import json
 from pathlib import Path
