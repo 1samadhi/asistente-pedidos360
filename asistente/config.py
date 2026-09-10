@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 
 RAIZ = Path(__file__).resolve().parent.parent
 load_dotenv(RAIZ / ".env")
-load_dotenv(RAIZ.parent / ".env")  # reutiliza el .env del curso si existe
 
 # --- Modelos (ver CLAUDE.md del curso) ---
 MODELO = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")

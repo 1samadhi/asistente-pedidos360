@@ -1,3 +1,8 @@
+# Credenciales. Este repositorio es publico: el .env NUNCA se versiona.
+.env
+.env.*
+!.env.example
+
 # El indice se reconstruye con: python -m asistente.ingesta
 indice/
 __pycache__/

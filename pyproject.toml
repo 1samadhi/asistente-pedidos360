@@ -1,0 +1,40 @@
+# Asistente de integracion para Pedidos360 — EP1 ISY0101
+#
+#   uv sync                                  instala todo
+#   uv run python -m asistente.ingesta       construye el indice
+#   uv run python -m asistente.agente "..."  pregunta
+[project]
+name = "asistente-pedidos360"
+version = "1.0.0"
+description = "Asistente de integracion para Pedidos360: RAG sobre documentacion propia y externa, con consulta en vivo a la API"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # --- LLM: Groq, el proveedor del curso ---
+    "langchain-groq>=0.2.0",
+    "langchain>=1.0.0",
+    "langchain-classic>=0.3.0",      # AgentExecutor y create_tool_calling_agent
+    "langchain-community>=0.3.0",    # FAISS
+    "langchain-text-splitters>=0.3.0",
+    # --- Recuperacion ---
+    "langchain-huggingface>=0.1.0",  # embeddings locales: Groq no ofrece endpoint
+    "sentence-transformers>=3.0.0",
+    "faiss-cpu>=1.7.0",
+    "scikit-learn>=1.3.0",           # TF-IDF del recuperador lexico
+    # --- Utilidades ---
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+# Solo para reproducir el notebook, el informe y la presentacion.
+docs = [
+    "jupyter>=1.0.0",
+    "ipykernel>=6.0.0",
+    "markdown-it-py>=3.0.0",   # informe: markdown -> html -> docx/pdf
+    "python-pptx>=0.6.23",     # presentacion
+    "pillow>=10.0.0",
+]
+dev = ["pytest>=7.0.0"]
+
+[tool.uv]
+package = false

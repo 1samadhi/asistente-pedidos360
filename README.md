@@ -26,8 +26,8 @@ elige cuál usar, que es lo que distingue a un agente de un RAG plano.
 
 ## Requisitos
 
-- **Python 3.13** y [uv](https://docs.astral.sh/uv/) — las dependencias son las del curso,
-  declaradas en el `pyproject.toml` de la raíz del repositorio.
+- **Python 3.13** y [uv](https://docs.astral.sh/uv/). Las dependencias están en el
+  `pyproject.toml` de este repositorio; `uv sync` instala todo, incluido Python.
 - Una **API key de Groq** (gratuita, en [console.groq.com](https://console.groq.com/)).
 - *Opcional:* credenciales de Entra ID para las consultas en vivo. **Sin ellas el
   asistente igual funciona**, respondiendo solo con documentación; las herramientas de
@@ -51,26 +51,24 @@ que se puede leer sin correr nada.
 ## Puesta en marcha
 
 ```bash
-# 1. Dependencias, desde la raíz del repositorio
+# 1. Dependencias
 uv sync
 
 # 2. Configuración
-cd EP1-asistente-pedidos360
 cp .env.example .env      # completa las variables (ver abajo)
 
 # 3. Construir el índice vectorial (~30 s la primera vez)
-uv run --project .. python -m asistente.ingesta
+uv run python -m asistente.ingesta
 
 # 4. Preguntar
-uv run --project .. python -m asistente.agente "¿Cómo obtengo un token para la API?"
-uv run --project .. python -m asistente.agente "¿Cuántos pedidos lleva mi comercio?"
+uv run python -m asistente.agente "¿Cómo obtengo un token para la API?"
+uv run python -m asistente.agente "¿Cuántos pedidos lleva mi comercio?"
 
 # Con -v se ve qué herramienta eligió el agente en cada paso
-uv run --project .. python -m asistente.agente -v "¿Qué scope necesito para crear pedidos?"
+uv run python -m asistente.agente -v "¿Qué scope necesito para crear pedidos?"
 ```
 
-`GROQ_API_KEY` se toma del `.env` de la raíz del repositorio si ya lo tienes configurado
-para el curso; no hace falta duplicarla.
+Todas las variables se leen del `.env` de este directorio.
 
 ### Variables de entorno
 
@@ -148,8 +146,8 @@ los RFC íntegros (29.000 palabras en inglés) desbalancearía la recuperación 
 ## Evaluación
 
 ```bash
-uv run --project .. python -m evaluacion.evaluar                    # recuperación, sin coste
-uv run --project .. python -m evaluacion.evaluar --generacion --n 30 # + fidelidad y relevancia
+uv run python -m evaluacion.evaluar                    # recuperación, sin coste
+uv run python -m evaluacion.evaluar --generacion --n 30 # + fidelidad y relevancia
 ```
 
 El set son **30 preguntas** con la fuente esperada y una respuesta de referencia
@@ -203,9 +201,9 @@ inventado y falsa— y exige que las ordene.
 ## Comprobar que todo cuadra con la pauta
 
 ```bash
-uv run --project .. python -m evaluacion.auditar_entregable   # ¿falta algo que exija la pauta?
-uv run --project .. python -m evaluacion.capturar_evidencia   # regenera la evidencia fechada
-uv run --project .. python scripts/convertir_informe.py       # regenera .docx y .pdf
+uv run python -m evaluacion.auditar_entregable   # ¿falta algo que exija la pauta?
+uv run python -m evaluacion.capturar_evidencia   # regenera la evidencia fechada
+uv run python scripts/convertir_informe.py       # regenera .docx y .pdf
 ```
 
 La auditoría comprueba que existan los siete elementos de la propuesta y los siete

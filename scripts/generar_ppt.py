@@ -251,7 +251,7 @@ def main():
           "lo consume como cualquier comercio integrado.", 30, ACENTO, True)
     texto(s, Inches(0.9), Inches(4.6), Inches(11.5), Inches(1.6),
           "Repositorio, informe, diagramas, evidencia de pruebas y notebook de demostración:\n\n"
-          "github.com/1samadhi/Ingenier-a-de-Soluciones-con-Inteligencia-Artificial", 18, SUAVE)
+          "github.com/1samadhi/asistente-pedidos360", 18, SUAVE)
     texto(s, Inches(0.9), Inches(6.3), Inches(11.5), Inches(0.6),
           "Ismael Oyarzún  ·  Felipe Angel", 17, TINTA, True)
     nota(s, "Cerrar con la demostración en vivo si hay tiempo: una pregunta de cada tipo.")
