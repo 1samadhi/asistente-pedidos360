@@ -389,7 +389,7 @@
   <div class="verified">
     <figure><b>3</b><span>Microservicios</span></figure>
     <figure><b>3</b><span>Emisores de identidad</span></figure>
-    <figure><b>6.334</b><span>Palabras de corpus</span></figure>
+    <figure><b>7.210</b><span>Palabras de corpus</span></figure>
     <figure><b>86</b><span>Pedidos operativos</span></figure>
   </div>
 
@@ -522,6 +522,15 @@ GET /v1/pedidos     → <span class="ok">HTTP 200 OK</span></pre>
           </tbody>
           <tfoot><tr><td>Total</td><td class="n">6.334</td><td></td></tr></tfoot>
         </table>
+      </div>
+
+      <div class="note" style="margin-top:1.4rem">
+        <p><strong>Actualización.</strong> Al implementar la solución se detectó que la
+        documentación existente no relaciona los errores HTTP con su causa, y que en un
+        punto contradice al despliegue real. Se añadió un décimo documento,
+        <code>09-errores-frecuentes.md</code>, escrito en este proyecto y verificado
+        contra el sistema en producción: el corpus interno pasa a <strong>7.210
+        palabras</strong>. La justificación de ese cambio está en el informe.</p>
       </div>
 
       <p>Se suman los <strong>contratos de API</strong> (colecciones Postman y Thunder

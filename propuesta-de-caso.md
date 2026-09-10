@@ -110,6 +110,12 @@ del sistema.
 | `docs/01-cognito.md` | 337 | Identity as a Service |
 | **Total** | **≈ 6.334** | |
 
+> **Actualización.** Al implementar la solución se detectó que la documentación existente
+> no relaciona los errores HTTP con su causa, y que en un punto contradice al despliegue
+> real. Se añadió un décimo documento, `09-errores-frecuentes.md`, escrito en este
+> proyecto y verificado contra el sistema en producción: el corpus interno pasa a **7.210
+> palabras**. La justificación de ese cambio está en el informe.
+
 Se suman como fuentes internas los **contratos de API** (colecciones Postman y Thunder
 Client) y el **código fuente Java** de los tres microservicios, del que se extraen los
 *scopes* exigidos por cada endpoint.
