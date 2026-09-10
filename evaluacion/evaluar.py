@@ -82,10 +82,24 @@ def evaluar_recuperacion(casos: list[dict]) -> dict:
 # Generacion (modelo como juez)
 # --------------------------------------------------------------------------
 
-JUEZ_FIDELIDAD = """Eres un evaluador estricto. Recibes un CONTEXTO y una RESPUESTA.
-Responde solo con un numero entre 0 y 1: que proporcion de las afirmaciones de la
-RESPUESTA se puede verificar en el CONTEXTO. Si la respuesta afirma cosas que el
-contexto no dice, baja la nota. No expliques nada, devuelve solo el numero.
+JUEZ_FIDELIDAD = """Evalua si una RESPUESTA se apoya en el CONTEXTO.
+
+Procede asi, en silencio:
+1. Enumera las afirmaciones verificables de la RESPUESTA.
+2. Marca cada una como respaldada por el CONTEXTO o no respaldada.
+3. Calcula la proporcion de respaldadas.
+
+Devuelve SOLO ese numero, redondeado a 0, 0.25, 0.5, 0.75 o 1:
+  1     todas las afirmaciones estan respaldadas
+  0.75  casi todas; alguna anade un detalle menor que el contexto no dice
+  0.5   la mitad aproximadamente; mezcla lo respaldado con lo inventado
+  0.25  la mayoria no esta respaldada
+  0     nada esta respaldado, o contradice al contexto
+
+Un dato concreto inventado —una URL, un parametro, un nombre de endpoint que el
+contexto no menciona— cuenta como no respaldado aunque suene plausible.
+
+No expliques nada. Devuelve solo el numero.
 
 CONTEXTO:
 {contexto}
@@ -93,10 +107,21 @@ CONTEXTO:
 RESPUESTA:
 {respuesta}"""
 
-JUEZ_RELEVANCIA = """Eres un evaluador estricto. Recibes una PREGUNTA, una RESPUESTA
-y la RESPUESTA DE REFERENCIA. Responde solo con un numero entre 0 y 1: cuanto
-responde la RESPUESTA a la PREGUNTA, comparada con la referencia. Una respuesta
-correcta pero incompleta merece nota media. No expliques nada, devuelve solo el numero.
+JUEZ_RELEVANCIA = """Evalua cuanto responde una RESPUESTA a una PREGUNTA, comparandola
+con la RESPUESTA DE REFERENCIA.
+
+Devuelve SOLO un numero, redondeado a 0, 0.25, 0.5, 0.75 o 1:
+  1     responde por completo y coincide con la referencia
+  0.75  responde lo esencial, pero omite un detalle que la referencia si da
+  0.5   responde a medias: acierta en una parte y deja otra sin cubrir, o es
+        tan general que el usuario tendria que volver a preguntar
+  0.25  apenas roza la pregunta
+  0     no responde, o responde otra cosa
+
+Que la respuesta sea mas extensa que la referencia no la mejora ni la empeora;
+lo que cuenta es si el usuario queda con la duda resuelta.
+
+No expliques nada. Devuelve solo el numero.
 
 PREGUNTA: {pregunta}
 

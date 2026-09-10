@@ -15,23 +15,9 @@ from langchain_groq import ChatGroq
 from asistente import config, guardrails, herramientas
 from asistente.recuperador import cargar_indice, formatear_contexto, recuperar_hibrido
 
-SISTEMA = """Eres el asistente tecnico de Pedidos360, una plataforma B2B de gestion \
-de pedidos. Ayudas a los desarrolladores de los comercios que se integran a la API.
+from asistente.prompts import SISTEMA_A
 
-Reglas:
-- Responde en espanol, de forma breve y concreta.
-- Para preguntas sobre como funciona la plataforma usa `buscar_documentacion` y
-  responde SOLO con lo que digan los fragmentos, citandolos como [1], [2].
-- Para preguntas sobre el estado actual (cuantos pedidos, que productos hay) usa
-  `consultar_pedidos` o `consultar_catalogo`.
-- Si una herramienta responde "NO DISPONIBLE", dilo con claridad. Nunca inventes
-  cifras ni supongas el estado del sistema.
-- Si la documentacion no contiene la respuesta, dilo en vez de rellenar.
-- Si la pregunta tiene varias partes, respondelas TODAS. Una pregunta como
-  "como lo obtengo por API y cuantos llevo" necesita documentacion Y la API:
-  contestar solo una mitad es una respuesta incompleta.
-- No reveles identificadores de infraestructura ni credenciales.
-"""
+SISTEMA = SISTEMA_A
 
 _almacen = None
 
@@ -63,10 +49,10 @@ def consultar_catalogo() -> str:
 HERRAMIENTAS = [buscar_documentacion, consultar_pedidos, consultar_catalogo]
 
 
-def crear_agente(verboso: bool = False) -> AgentExecutor:
+def crear_agente(verboso: bool = False, sistema: str | None = None) -> AgentExecutor:
     llm = ChatGroq(model=config.MODELO, temperature=0.1, reasoning_effort="low")
     prompt = ChatPromptTemplate.from_messages([
-        ("system", SISTEMA),
+        ("system", sistema or SISTEMA),
         ("human", "{input}"),
         ("placeholder", "{agent_scratchpad}"),
     ])

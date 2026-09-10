@@ -1,0 +1,167 @@
+{
+  "A zero-shot": {
+    "fidelidad": 1.0,
+    "relevancia": 1.0,
+    "n": 8,
+    "detalle": [
+      {
+        "id": 1,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El 401 ocurre porque la ruta **/v1/pedidos** está protegida por el autorizador de Microsoft Entra ID y solo acepta tokens emitidos por ese emisor.  \nAunque tu token de `ms‑auth` sea válido, tenga el `iss` correcto, la audiencia `exp1-api` y los scopes `pedidos.leer` / `pedidos.escribir`, el API Gateway lo rechaza antes de llegar al microservicio, ya que cada ruta solo valida un único emisor. Por eso el token es descartado y la API responde `Unauthorized` [1].  "
+      },
+      {
+        "id": 4,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El sistema firmó los tokens con **RS256** porque el API Gateway de AWS valida la firma usando claves públicas publicadas en un JWKS. Con RS256 (algoritmo asimétrico) el gateway puede verificar la firma sin conocer ningún secreto compartido, lo que no es posible con HS256 (algoritmo simétrico) [2]."
+      },
+      {
+        "id": 7,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El error 404 ocurre porque la ruta que estás usando es la del microservicio interno (`/api/v1/pedidos`). Desde Internet debes acceder a la ruta publicada por el API Gateway, que es `/v1/pedidos`. Usa esa ruta y el gateway reenviará la solicitud al microservicio correcto. [3]"
+      },
+      {
+        "id": 10,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "Se despliega la plataforma en una instancia **t3.small** y no en una **t3.micro** porque la micro no dispone de memoria suficiente para los tres microservicios Spring Boot que se ejecutan en Docker. Cada JVM consume entre 250 y 350 MB de RSS, y con solo 913 MB de RAM (≈600 MB libres) la t3.micro se quedaría sin espacio, aun ajustando `-Xmx`. Con 2 GB de RAM que ofrece la t3.small los tres servicios más nginx caben con holgura, y además se añade 2 GB de swap para cubrir picos de compilación de Maven【2†L1-L7】."
+      },
+      {
+        "id": 13,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "No. La base de datos RDS MySQL no es accesible desde internet; su dirección DNS resuelve a una IP privada que no es enrutable fuera de la VPC y está configurada como **Accesible públicamente: No**【1†L1-L4】【3†L7-L10】."
+      },
+      {
+        "id": 16,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El frontend de Pedidos360 se autentica mediante **el flujo de autorización “Authorization Code + PKCE”** (code + PKCE) usando MSAL. [5]"
+      },
+      {
+        "id": 19,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "Se usa un **cliente de máquina a máquina** en Cognito, configurado con el flujo **`client_credentials`** [1][2]."
+      },
+      {
+        "id": 22,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El claim **`aud`** (audience) identifica a los destinatarios para los que el JWT está destinado. Cada servicio que procese el token debe reconocer su propio identificador dentro de este claim; si no lo encuentra, el token debe ser rechazado. Es opcional y puede ser una cadena o un arreglo de cadenas sensibles a mayúsculas/minúsculas【2】."
+      }
+    ]
+  },
+  "B few-shot": {
+    "fidelidad": 0.9375,
+    "relevancia": 1.0,
+    "n": 8,
+    "detalle": [
+      {
+        "id": 1,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El 401 ocurre porque las rutas `/v1/pedidos` están protegidas por el **autorizador JWT de Microsoft Entra ID**.  \nAunque el token emitido por `ms‑auth` sea válido, tenga el `iss` correcto y contenga los scopes `pedidos.leer` o `pedidos.escribir`, el API Gateway solo acepta tokens cuyo emisor coincida con el autorizador configurado para esas rutas. Como el autorizador solo reconoce un único emisor, el token de `ms‑auth` es rechazado antes de llegar al microservicio [1].\n\nEn resumen, el token no es aceptado porque la ruta usa un autorizador distinto al que emitió tu token. Necesitas obtener un token del emisor configurado en el API Gateway (Microsoft Entra ID) o cambiar la configuración del autorizador para aceptar tu emisor."
+      },
+      {
+        "id": 4,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El sistema firmó los tokens con **RS256** porque el API Gateway de AWS valida la firma usando claves públicas publicadas en un JWKS. Con RS256 (algoritmo asimétrico) el gateway puede verificar la firma sin conocer ningún secreto compartido, lo que no es posible con HS256 (algoritmo simétrico) [2]."
+      },
+      {
+        "id": 7,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El error 404 se produce porque estás llamando a la ruta interna del microservicio (`/api/v1/pedidos`). Desde Internet solo está expuesta la ruta del API Gateway, que es `/v1/pedidos`. Usa esa ruta y el gateway reenviará la solicitud al microservicio interno.  \n\n[3] — “404 Not Found en `/api/v1/...`: **Causa** confundir la ruta del gateway con la del microservicio. Desde Internet usa `/v1/pedidos`.”"
+      },
+      {
+        "id": 10,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "Se despliega en una instancia **t3.small** y no en una t3.micro porque la memoria de la micro (≈ 913 MB) no es suficiente para los tres contenedores JVM de Spring Boot que ejecutan los microservicios. Cada JVM consume entre 250 y 350 MB de RSS, y además requieren espacio para metaspace, code cache y pilas de hilos, lo que supera con holgura la capacidad de una t3.micro. Con 2 GB de RAM en la t3.small los servicios y nginx caben con margen, y se complementa con 2 GB de swap para los picos de compilación de Maven dentro de Docker【2】."
+      },
+      {
+        "id": 13,
+        "fidelidad": 0.5,
+        "relevancia": 1.0,
+        "respuesta": "No, la base de datos no tiene IP pública y solo permite conexiones desde el security group de la EC2, no desde internet. [1]"
+      },
+      {
+        "id": 16,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El frontend de Pedidos360 se autentica mediante el flujo **Authorization Code con PKCE** (code + PKCE) [5]."
+      },
+      {
+        "id": 19,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "Se utiliza un **cliente de máquina a máquina** (client‑credentials) en Amazon Cognito. El cliente se crea con el flujo `client_credentials` y sin interacción de usuario【1†L4-L9】."
+      },
+      {
+        "id": 22,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El claim **`aud`** (audience) identifica a los destinatarios para los que el JWT está destinado. Cada servicio que procese el token debe reconocer su propio identificador dentro de este claim; si no lo encuentra, debe rechazar el token. Es opcional y puede ser una cadena o un arreglo de cadenas. [2]"
+      }
+    ]
+  },
+  "C chain-of-thought": {
+    "fidelidad": 0.84375,
+    "relevancia": 0.875,
+    "n": 8,
+    "detalle": [
+      {
+        "id": 1,
+        "fidelidad": 0.75,
+        "relevancia": 1.0,
+        "respuesta": "El error 401 ocurre porque el endpoint **/v1/pedidos** está protegido por el autorizador de **Microsoft Entra ID** y solo acepta tokens emitidos por ese emisor. Un token válido de **ms‑auth** (aunque tenga el `iss`, la audiencia `exp1-api` y los scopes `pedidos.leer` / `pedidos.escribir`) es rechazado en el borde del API Gateway, ya que esa ruta solo reconoce un único emisor. Por eso la API responde `{\"message\":\"Unauthorized\"}` antes de llegar al microservicio【1†L1-L9】.  \n\nEn resumen, el token de ms‑auth no es aceptado porque la ruta usa un autorizador diferente; necesitas un token emitido por Microsoft Entra ID o configurar un autorizador adicional para aceptar ese emisor."
+      },
+      {
+        "id": 4,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El sistema firmó los tokens con **RS256** porque el API Gateway de AWS valida la firma usando claves públicas publicadas en un JWKS. Con RS256 se pueden distribuir esas claves públicas y la verificación es asimétrica; un secreto simétrico como HS256 no sirve para ese mecanismo. [2]"
+      },
+      {
+        "id": 7,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El error 404 ocurre porque la ruta que estás llamando no está expuesta públicamente por el API Gateway.  \n\nEn la arquitectura de Pedidos360 las rutas externas se publican sin el prefijo **/api**; por ejemplo:\n\n| Ruta pública (API Gateway) | Destino interno |\n|----------------------------|-----------------|\n| `GET /v1/pedidos`          | `http://IP:8082/api/v1/pedidos` |\n| `POST /v1/pedidos`         | `http://IP:8082/api/v1/pedidos` |\n\n[2]  \n\nPor lo tanto, la llamada correcta desde internet es a **/v1/pedidos** (con el método GET o POST según lo que necesites) y no a **/api/v1/pedidos**.  \n\nAsegúrate también de enviar un token válido de Microsoft Entra ID, ya que la ruta está protegida.  \n\n[1]​,​[3]​"
+      },
+      {
+        "id": 10,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "Se despliega la aplicación en una instancia **t3.small**.  \n\n**Por qué no se usa t3.micro**  \nUna t3.micro solo dispone de 913 MB de RAM (≈600 MB libres). Cada una de las tres JVM de Spring Boot que ejecutan los microservicios consume entre 250 y 350 MB de RSS, sin contar metaspace, code cache y pilas de hilos. Con esa memoria los servicios no caben, aun ajustando `-Xmx`. Con una t3.small (2 GB) los tres servicios más nginx caben con holgura, y además se añadió 2 GB de swap para cubrir los picos de compilación de Maven dentro de Docker【2†L1-L7】."
+      },
+      {
+        "id": 13,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "La base de datos está en una instancia RDS MySQL dentro de una VPC y **no es accesible desde internet**; el nombre DNS resuelve a una dirección privada que no es enrutable fuera de la VPC【1†L1-L4】【3†L7-L10】."
+      },
+      {
+        "id": 16,
+        "fidelidad": 0.0,
+        "relevancia": 0.0,
+        "respuesta": "No se encuentra en la documentación disponible información sobre el flujo OAuth que utiliza el frontend de Pedidos360."
+      },
+      {
+        "id": 19,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "Se utiliza un **cliente de máquina a máquina** en Cognito, creado con el flujo **client_credentials** (sin interacción de usuario)【1†L4-L8】."
+      },
+      {
+        "id": 22,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "respuesta": "El claim **`aud`** (audience) identifica a los destinatarios para los que el JWT está destinado. Cada entidad que procese el token debe reconocer su propio identificador en este claim; si no lo encuentra, debe rechazar el token. Su uso es opcional y puede ser una cadena o un arreglo de cadenas sensibles a mayúsculas/minúsculas【2】."
+      }
+    ]
+  }
+}
