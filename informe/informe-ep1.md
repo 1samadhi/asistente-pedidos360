@@ -20,6 +20,10 @@ Ismael Oyarzún · *[nombre del compañero/a]* — Duoc UC, septiembre de 2026
 >    tabla y una frase, aunque el detalle es de lo más interesante que tiene el informe.
 > 4. El último párrafo de D, sobre que el asistente no modifica Pedidos360.
 >
+> En `referencias-disponibles.md` están las fuentes académicas verificadas para citar en E,
+> con una tabla de qué respalda cada pregunta. Buscar referencias es de lo que la pauta sí
+> autoriza apoyar con IA; redactar el argumento, no.
+>
 > Vuelvan a ejecutar el conversor después de escribir E y F para contar páginas de verdad.
 > Si el docente exige el interlineado doble de APA 7, el texto no cabrá en cinco páginas
 > por mucho que se recorte: háganle esa pregunta antes de maquetar. La tipografía se
@@ -208,7 +212,7 @@ Chile, 28 de agosto de 1999.
 OWASP Foundation. (2023). *API Security Top 10*.
 https://owasp.org/API-Security/editions/2023/en/0x11-t10/
 
-*[Añadir aquí las referencias que el equipo utilice en los apartados E y F.]*
+*[Añadir las usadas en E y F; hay cuatro verificadas en `referencias-disponibles.md`.]*
 
 ## Declaración de uso de Inteligencia Artificial
 
