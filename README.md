@@ -6,8 +6,6 @@ Asistente conversacional que responde las consultas técnicas de los desarrollad
 integran su comercio a la API de **Pedidos360**. Combina recuperación sobre documentación
 (RAG) con consultas en vivo a la API, y decide por sí mismo cuál corresponde en cada caso.
 
-El contexto académico —propuesta, informe y presentación— está en [`entrega/`](entrega/).
-
 ---
 
 ## Qué hace
@@ -130,9 +128,6 @@ propio — los Resource Server de Spring aceptan los tres emisores.
 
 ## Estructura
 
-El repositorio separa **el producto** de **la entrega académica**: la raíz es el sistema,
-y todo lo que existe por ser una evaluación vive en `entrega/`.
-
 ```
 recorrido.ipynb    Notebook de demostración: recorre el sistema paso a paso
 asistente/         El sistema
@@ -153,12 +148,6 @@ docs/              Documentación del sistema
 scripts/           Utilidades de operación
   poblar_pedidos.py      Genera pedidos de demostración vía la API
   verificar_api.py       Comprueba la API e imprime un reporte reenviable
-entrega/           Solo lo académico — no forma parte del sistema
-  propuesta-de-caso.md/.html
-  informe/               El informe y sus formatos entregables
-  presentacion/          Diapositivas y sus diagramas
-  convertir_informe.py   Markdown → .docx y .pdf
-  generar_ppt.py         Genera la presentación desde resultados.json
 indice/            Índice FAISS y léxico — se genera, no se versiona
 ```
 
