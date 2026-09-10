@@ -93,7 +93,7 @@ def recuperar(pregunta: str, k: int | None = None, almacen: FAISS | None = None)
     return almacen.similarity_search_with_score(pregunta, k=k or config.K_RECUPERACION)
 
 
-def recuperar_hibrido(pregunta: str, k: int = 5, min_interno: int = 0,
+def recuperar_hibrido(pregunta: str, k: int | None = None, min_interno: int = 0,
                       peso_lexico: float = 0.8, peso_denso: float = 0.2,
                       max_por_archivo: int = 2,
                       almacen: FAISS | None = None) -> list[Document]:
@@ -125,6 +125,7 @@ def recuperar_hibrido(pregunta: str, k: int = 5, min_interno: int = 0,
     """
     almacen = almacen or cargar_indice()
     lexico = cargar_lexico()
+    k = k or config.K_RECUPERACION
     amplio = k * 5
 
     # Cada ranking se identifica por (archivo, seccion, inicio del texto) para

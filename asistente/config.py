@@ -25,7 +25,7 @@ CORPUS = RAIZ / "corpus"
 INDICE = RAIZ / "indice"
 TAMANO_CHUNK = int(os.getenv("TAMANO_CHUNK", "900"))
 SOLAPE_CHUNK = int(os.getenv("SOLAPE_CHUNK", "150"))
-K_RECUPERACION = int(os.getenv("K_RECUPERACION", "4"))
+K_RECUPERACION = int(os.getenv("K_RECUPERACION", "5"))
 
 # --- API de Pedidos360 ---
 # Por defecto el despliegue en AWS; para trabajar sin lab, apuntar a localhost

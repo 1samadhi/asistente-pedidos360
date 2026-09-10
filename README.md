@@ -91,24 +91,36 @@ docker compose -f docker-compose.yml -f docker-compose.local.yml up --build -d
 
 ```
 corpus/
-  interno/     Documentación propia de Pedidos360 · 9 archivos, 6.334 palabras
+  interno/     Documentación de Pedidos360 · 10 archivos, 7.210 palabras
+               (9 preexistentes + 09-errores-frecuentes.md, escrito en este proyecto)
   externo/     RFC 6749, RFC 7519 y OWASP API Top 10 · 3 archivos, ~4.100 palabras
 asistente/
   config.py        Configuración, toda por variables de entorno
-  ingesta.py       Troceo del corpus e índice FAISS
-  recuperador.py   Recuperación con cuota por origen
+  ingesta.py       Troceo por encabezado e índice FAISS
+  recuperador.py   Recuperación híbrida: densa + léxica, fusionadas con RRF
   herramientas.py  Consultas en vivo a la API de Pedidos360
   guardrails.py    Redacción de identificadores de infraestructura
+  prompts.py       Las tres variantes del prompt de sistema
   agente.py        Agente con tres herramientas
+evaluacion/
+  preguntas.jsonl      Set de 30 preguntas con fuente y respuesta de referencia
+  evaluar.py           Métricas de recuperación y de generación
+  comparar_prompts.py  Compara las variantes de prompt
+  calibrar_juez.py     Verifica que la rúbrica del juez discrimina
+  test_guardrails.py   17 pruebas del filtro de salida
+  evidencias/          Salidas guardadas como evidencia
+docs/
+  arquitectura.svg     Diagrama de la solución
 scripts/
-  poblar_pedidos.py   Genera pedidos de demostración vía la API
-indice/          Índice FAISS — se genera, no se versiona
+  poblar_pedidos.py    Genera pedidos de demostración vía la API
+  verificar_api.py     Comprueba la API e imprime un reporte reenviable
+indice/          Índice FAISS y léxico — se genera, no se versiona
 ```
 
 El corpus externo son **extractos de las secciones pertinentes** de cada fuente, con la
 URL del documento completo en la cabecera de cada archivo. Se acota a propósito: incluir
 los RFC íntegros (29.000 palabras en inglés) desbalancearía la recuperación frente a las
-6.334 palabras de documentación propia en español.
+7.210 palabras de documentación propia en español.
 
 ---
 
