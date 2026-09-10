@@ -8,6 +8,11 @@ porque es lo que se versiona bien; esto genera los formatos entregables.
 El diagrama se rasteriza a PNG antes de incrustarlo: LibreOffice no trata el SVG
 de forma fiable al convertir, y un informe sin la figura pierde el indicador IE6.
 
+Y el tamano de la figura va en los ATRIBUTOS width/height del <img>, no en el CSS.
+LibreOffice ignora la regla CSS y usa el tamano intrinseco en pixeles: 1000 px a
+96 dpi son 26,5 cm, asi que dibujaba la figura desbordando una pagina de 21 cm y
+el informe salia con el diagrama cortado por la derecha.
+
 Sobre el formato: se usa un cuerpo serif de 11 pt con interlineado sencillo, que
 es lo que permite que quepan las cinco paginas. Si el docente exige el
 interlineado doble de APA 7, el texto NO cabra en cinco paginas y habra que
@@ -22,6 +27,8 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 MD = RAIZ / "informe" / "informe-ep1.md"
 SALIDA = RAIZ / "informe"
+
+ANCHO_FIGURA_CM = 16.0
 
 ESTILO = """
 @page { margin: 2.2cm; }
@@ -86,6 +93,12 @@ def main():
     from markdown_it import MarkdownIt
     md = MarkdownIt("commonmark").enable("table").enable("strikethrough")
     cuerpo = md.render(texto)
+
+    # Tamano de la figura en atributos, en pixeles a 96 dpi. Es lo unico que
+    # LibreOffice respeta al convertir desde HTML.
+    ancho_px = round(ANCHO_FIGURA_CM / 2.54 * 96)
+    alto_px = round(ancho_px * 700 / 1000)  # el SVG es 1000x700
+    cuerpo = cuerpo.replace("<img ", f'<img width="{ancho_px}" height="{alto_px}" ', 1)
 
     html = SALIDA / "informe-ep1.html"
     html.write_text(
