@@ -148,7 +148,6 @@ evaluacion/        Cómo se comprueba que funciona
   test_guardrails.py     Pruebas del filtro de salida
   test_modos_api.py      Pruebas de los modos gateway y directo
   capturar_evidencia.py  Ejecuta las pruebas y guarda su salida fechada
-  auditar_entregable.py  Comprueba la entrega contra la pauta
   evidencias/            Salidas guardadas como evidencia
 docs/              Documentación del sistema
   arquitectura.svg                       Diagrama de la solución
@@ -254,19 +253,6 @@ Las trazas aparecen en el proyecto `asistente-pedidos360` del panel de LangSmith
 > LangChain intenta enviar cada traza igual y la consola se llena de errores 401 que no son
 > un fallo del proyecto. `activar_trazas()` comprueba que haya clave antes de encender, y
 > si falta lo dice en vez de fallar en silencio.
-
-## Comprobar que todo cuadra con la pauta
-
-```bash
-uv run python -m evaluacion.auditar_entregable   # ¿falta algo que exija la pauta?
-uv run python -m evaluacion.capturar_evidencia   # regenera la evidencia fechada
-uv run --extra docs python entrega/convertir_informe.py   # regenera .docx y .pdf
-```
-
-La auditoría comprueba que existan los siete elementos de la propuesta y los siete
-apartados del informe, que el repositorio contenga lo que la pauta exige —bocetos,
-evidencia de pruebas, README—, que las cifras citadas en los documentos coincidan con las
-que produce el código, y que no queden marcadores sin completar.
 
 ## Seguridad
 
