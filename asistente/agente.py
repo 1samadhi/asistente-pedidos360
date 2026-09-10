@@ -50,6 +50,9 @@ HERRAMIENTAS = [buscar_documentacion, consultar_pedidos, consultar_catalogo]
 
 
 def crear_agente(verboso: bool = False, sistema: str | None = None) -> AgentExecutor:
+    # Si hay clave de LangSmith, cada ejecucion queda trazada: que herramienta se
+    # eligio, que contexto se recupero, cuanto tardo y cuantos tokens costo.
+    config.activar_trazas()
     llm = ChatGroq(model=config.MODELO, temperature=0.1, reasoning_effort="low")
     prompt = ChatPromptTemplate.from_messages([
         ("system", sistema or SISTEMA),

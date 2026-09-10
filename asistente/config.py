@@ -47,6 +47,39 @@ ENTRA_USUARIO = os.getenv("ENTRA_USUARIO_CLIENTE", "")
 ENTRA_PASSWORD = os.getenv("ENTRA_PASSWORD_CLIENTE", "")
 
 
+# --- LangSmith: trazas de cada ejecucion (opcional) ---
+# LangChain envia las trazas solo, leyendo estas variables. No hace falta tocar
+# el codigo del agente.
+LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT", "asistente-pedidos360")
+
+
+def activar_trazas() -> bool:
+    """Enciende LangSmith solo si hay clave, y devuelve si quedo activo.
+
+    Poner LANGSMITH_TRACING=true con la clave vacia no es inocuo: LangChain
+    intenta enviar cada traza igual y la consola se llena de errores 401 que no
+    son un fallo del proyecto. Se comprueba antes de encender.
+    """
+    quiere = os.getenv("LANGSMITH_TRACING", "").lower() in ("true", "1", "yes")
+    clave = os.getenv("LANGSMITH_API_KEY", "").strip()
+    activo = quiere and bool(clave)
+    os.environ["LANGSMITH_TRACING"] = "true" if activo else "false"
+    if activo:
+        os.environ["LANGSMITH_PROJECT"] = LANGSMITH_PROJECT
+    return activo
+
+
+def estado_trazas() -> str:
+    """Texto para explicar por que las trazas estan o no activas."""
+    quiere = os.getenv("LANGSMITH_TRACING", "").lower() in ("true", "1", "yes")
+    clave = bool(os.getenv("LANGSMITH_API_KEY", "").strip())
+    if quiere and clave:
+        return f"activas · proyecto '{LANGSMITH_PROJECT}'"
+    if quiere and not clave:
+        return "pedidas pero sin LANGSMITH_API_KEY: se dejan apagadas"
+    return "apagadas (LANGSMITH_TRACING no esta en true)"
+
+
 def hay_credenciales_api() -> bool:
     """Sin credenciales el asistente sigue respondiendo, pero solo con documentos."""
     return all([ENTRA_TENANT_ID, ENTRA_CLIENT_ID, ENTRA_APP_ID_URI,

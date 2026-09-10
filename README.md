@@ -198,6 +198,34 @@ inventado y falsa— y exige que las ordene.
   cerrado cuando la documentación dice lo contrario, y penalizaba al asistente por
   acertar. Conviene revisar los desacuerdos antes de creerle al set.
 
+## Trazas con LangSmith (opcional)
+
+Registra cada consulta: qué herramienta eligió el modelo, qué fragmentos recuperó, cuánto
+tardó y cuántos tokens costó. No hace falta tocar el código — LangChain lo envía solo.
+
+1. Clave gratuita en [smith.langchain.com](https://smith.langchain.com) → *Settings* → *API Keys*.
+2. En el `.env`:
+
+```bash
+LANGSMITH_TRACING="true"
+LANGSMITH_API_KEY="lsv2_..."
+LANGSMITH_PROJECT="asistente-pedidos360"
+```
+
+3. Comprobar y ejecutar:
+
+```bash
+uv run python -c "from asistente import config; print(config.estado_trazas())"
+uv run python -m asistente.agente "¿Por qué mi token da 401?"
+```
+
+Las trazas aparecen en el proyecto `asistente-pedidos360` del panel de LangSmith.
+
+> **Por qué no basta con poner `true`.** Con `LANGSMITH_TRACING="true"` y la clave vacía,
+> LangChain intenta enviar cada traza igual y la consola se llena de errores 401 que no son
+> un fallo del proyecto. `activar_trazas()` comprueba que haya clave antes de encender, y
+> si falta lo dice en vez de fallar en silencio.
+
 ## Comprobar que todo cuadra con la pauta
 
 ```bash
