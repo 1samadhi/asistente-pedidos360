@@ -103,18 +103,25 @@ asistente/
   prompts.py       Las tres variantes del prompt de sistema
   agente.py        Agente con tres herramientas
 evaluacion/
-  preguntas.jsonl      Set de 30 preguntas con fuente y respuesta de referencia
-  evaluar.py           Métricas de recuperación y de generación
-  comparar_prompts.py  Compara las variantes de prompt
-  calibrar_juez.py     Verifica que la rúbrica del juez discrimina
-  test_guardrails.py   17 pruebas del filtro de salida
-  evidencias/          Salidas guardadas como evidencia
+  preguntas.jsonl        Set de 30 preguntas con fuente y respuesta de referencia
+  evaluar.py             Métricas de recuperación y de generación
+  comparar_prompts.py    Compara las variantes de prompt
+  calibrar_juez.py       Verifica que la rúbrica del juez discrimina
+  test_guardrails.py     17 pruebas del filtro de salida
+  capturar_evidencia.py  Ejecuta las pruebas y guarda su salida fechada
+  auditar_entregable.py  Comprueba el entregable contra la pauta
+  evidencias/            Salidas guardadas como evidencia
 docs/
-  arquitectura.svg     Diagrama de la solución
+  arquitectura.svg                  Diagrama de la solución
+  boceto-secuencia-consulta-mixta.svg   Boceto: cómo se resuelve una consulta mixta
+informe/
+  informe-ep1.md         Fuente del informe
+  informe-ep1.docx/.pdf  Entregable, generado desde el Markdown
 scripts/
-  poblar_pedidos.py    Genera pedidos de demostración vía la API
-  verificar_api.py     Comprueba la API e imprime un reporte reenviable
-indice/          Índice FAISS y léxico — se genera, no se versiona
+  poblar_pedidos.py      Genera pedidos de demostración vía la API
+  verificar_api.py       Comprueba la API e imprime un reporte reenviable
+  convertir_informe.py   Markdown → .docx y .pdf
+indice/            Índice FAISS y léxico — se genera, no se versiona
 ```
 
 El corpus externo son **extractos de las secciones pertinentes** de cada fuente, con la
@@ -128,7 +135,7 @@ los RFC íntegros (29.000 palabras en inglés) desbalancearía la recuperación 
 
 ```bash
 uv run --project .. python -m evaluacion.evaluar                    # recuperación, sin coste
-uv run --project .. python -m evaluacion.evaluar --generacion --n 8 # + fidelidad y relevancia
+uv run --project .. python -m evaluacion.evaluar --generacion --n 30 # + fidelidad y relevancia
 ```
 
 El set son **30 preguntas** con la fuente esperada y una respuesta de referencia
@@ -178,6 +185,19 @@ inventado y falsa— y exige que las ordene.
   también puede equivocarse: una respuesta de referencia afirmaba que el puerto 22 estaba
   cerrado cuando la documentación dice lo contrario, y penalizaba al asistente por
   acertar. Conviene revisar los desacuerdos antes de creerle al set.
+
+## Comprobar que todo cuadra con la pauta
+
+```bash
+uv run --project .. python -m evaluacion.auditar_entregable   # ¿falta algo que exija la pauta?
+uv run --project .. python -m evaluacion.capturar_evidencia   # regenera la evidencia fechada
+uv run --project .. python scripts/convertir_informe.py       # regenera .docx y .pdf
+```
+
+La auditoría comprueba que existan los siete elementos de la propuesta y los siete
+apartados del informe, que el repositorio contenga lo que la pauta exige —bocetos,
+evidencia de pruebas, README—, que las cifras citadas en los documentos coincidan con las
+que produce el código, y que no queden marcadores sin completar.
 
 ## Seguridad
 

@@ -5,17 +5,25 @@ Ismael Oyarzún · *[nombre del compañero/a]* — Duoc UC, septiembre de 2026
 
 > **Nota para el equipo, borrar antes de entregar.** Los apartados **E** y **F** están sin
 > redactar a propósito: la pauta prohíbe usar IA para justificaciones técnicas,
-> conclusiones y reflexiones. Ahí encontrarán los hechos ordenados y las preguntas que
-> deben responder. Todo lo demás está redactado y cada cifra es reproducible con los
-> comandos del `README.md`.
+> conclusiones y reflexiones. Ahí están los hechos ordenados y las preguntas que deben
+> responder. Todo lo demás está redactado y cada cifra es reproducible con los comandos
+> del `README.md`.
 >
-> **Sobre el límite de cinco páginas.** Lo escrito son ~2.100 palabras, unas 4 páginas con
-> la figura. Al añadir E y F es probable que se pase. Si hay que recortar, en este orden y
-> nunca las tablas ni el diagrama, que es donde se concentra la evidencia:
-> 1. El segundo párrafo de A (la descripción de la plataforma), resumible en dos líneas.
-> 2. Las explicaciones de por qué perdieron B y C en el apartado B: basta la tabla y una
->    frase, aunque el detalle es de lo más interesante que tiene el informe.
-> 3. El párrafo sobre el tamaño de fragmento por origen en C.
+> **El límite de cinco páginas está justo.** El PDF generado con
+> `python scripts/convertir_informe.py` ocupa exactamente 5 páginas **con E y F todavía sin
+> escribir**. Al reemplazar ese andamiaje por prosa propia es casi seguro que se pase, así
+> que hay que recortar. En este orden, y nunca las tablas ni la figura, que es donde se
+> concentra la evidencia:
+> 1. La declaración de uso de IA, moviéndola a un anexo fuera del cuerpo del informe.
+> 2. El párrafo de A que describe la plataforma, resumible en dos líneas.
+> 3. Las explicaciones de por qué perdieron las variantes B y C en el apartado B: basta la
+>    tabla y una frase, aunque el detalle es de lo más interesante que tiene el informe.
+> 4. El último párrafo de D, sobre que el asistente no modifica Pedidos360.
+>
+> Vuelvan a ejecutar el conversor después de escribir E y F para contar páginas de verdad.
+> Si el docente exige el interlineado doble de APA 7, el texto no cabrá en cinco páginas
+> por mucho que se recorte: háganle esa pregunta antes de maquetar. La tipografía se
+> cambia en un solo sitio, al principio de `scripts/convertir_informe.py`.
 
 ---
 
@@ -23,13 +31,12 @@ Ismael Oyarzún · *[nombre del compañero/a]* — Duoc UC, septiembre de 2026
 
 **Pedidos360** es una PYME tecnológica chilena que ofrece a comercios asociados una
 plataforma B2B de gestión de pedidos entregada como API, con autenticación federada: cada
-comercio accede con el Microsoft Entra ID que ya usa internamente. La plataforma está
-operativa sobre AWS —EC2, API Gateway y RDS MySQL— con tres microservicios Spring Boot y
-tres emisores de identidad simultáneos.
+comercio accede con el Microsoft Entra ID que ya usa internamente. Está operativa sobre
+AWS con tres microservicios Spring Boot y tres emisores de identidad simultáneos.
 
 **El problema es el onboarding técnico.** Cada comercio nuevo necesita que un
 desarrollador entienda qué emisor le corresponde, cómo obtener un token, qué *scopes*
-necesita y qué significa cada error. Esa información está repartida entre un README, seis
+necesita y qué significa cada error, información repartida entre un README, seis
 documentos técnicos, un CHANGELOG, dos colecciones de API y el código fuente.
 
 El caso no es hipotético y se comprobó contra el sistema en producción. Un token emitido
@@ -51,9 +58,8 @@ termina en el equipo de ingeniería.
 | O5 | Responder sobre datos actuales | Consultas resueltas contra la API | ≥ 90% | cumplido |
 | O6 | No filtrar información sensible | Identificadores en las respuestas | 0 | **0** (17 pruebas) |
 
-Las seis métricas se obtienen con los comandos del `README.md`. Las de generación están
-medidas sobre las 30 preguntas, no sobre una muestra: al ampliarlas de 8 a 30 la fidelidad
-bajó de 1,00 a 0,88, lo que motivó la corrección de troceo descrita en el apartado C.
+Todas se reproducen con los comandos del `README.md`, y las de generación están medidas
+sobre las 30 preguntas, no sobre una muestra.
 
 ## B. Formulación de prompts (IE2)
 
@@ -92,98 +98,77 @@ que merecen es distinta:
 | Interno | Documentación de Pedidos360: README, seis documentos técnicos, CHANGELOG y una guía de errores frecuentes escrita en este proyecto | 10 archivos · 7.210 palabras |
 | Externo | RFC 6749 (OAuth 2.0), RFC 7519 (JWT) y OWASP API Security Top 10, acotados a las secciones pertinentes | 3 archivos · ~4.100 palabras |
 
-Los RFC se recortan a propósito: incluirlos completos —29.000 palabras en inglés—
-desbalancearía la recuperación frente a la documentación propia en español.
+Los RFC se recortan a propósito: completos —29.000 palabras en inglés— desbalancearían la
+recuperación frente a la documentación propia en español.
 
 **Troceo.** División por encabezado de Markdown y luego por tamaño, anteponiendo a cada
-fragmento el documento y la sección a la que pertenece. Sin ese encabezado, un fragmento
-tomado de la mitad de `03-api-gateway.md` no menciona en su texto ni «API Gateway» ni su
-sección, y su vector no se parece a una pregunta que use esas palabras. Resultado: 160
-fragmentos, 115 internos y 30 externos.
-
-El tamaño del fragmento se fija por origen. Los RFC son texto plano con listas indentadas
-largas y sin encabezados internos: con el tamaño usado para la documentación propia, las
-definiciones de error quedaban partidas a mitad de frase. Se detectó por sus consecuencias,
-descritas abajo.
+fragmento su documento y sección. Sin ese encabezado, un fragmento tomado de la mitad de
+`03-api-gateway.md` no menciona en su texto ni «API Gateway» ni su sección, y su vector no
+se parece a una pregunta que use esas palabras. El tamaño se fija por origen: los RFC son
+texto plano con listas indentadas largas, y con el tamaño de la documentación propia las
+definiciones de error quedaban partidas a mitad de frase. Resultado: 145 fragmentos.
 
 **Recuperación híbrida.** Búsqueda densa con embeddings locales multilingües, búsqueda
-léxica TF-IDF, y fusión de ambos rankings con *Reciprocal Rank Fusion*, más un tope de dos
+léxica TF-IDF, y fusión de ambos rankings con *Reciprocal Rank Fusion*, con un tope de dos
 fragmentos por archivo.
 
 | Estrategia | Context recall | Context precision | Preguntas sin fuente |
 |---|---:|---:|---:|
-| Solo semántica | 0,78 | 0,59 | 3 |
+| Solo semántica | 0,80 | 0,58 | 2 |
 | Híbrida, pesos iguales | 0,78 | 0,51 | 4 |
-| **Híbrida 0,8 / 0,2 con tope** | **0,92** | **0,44** | **0** |
+| **Híbrida 0,8 / 0,2 con tope** | **0,92** | **0,45** | **0** |
 
-Dos advertencias metodológicas sobre esta tabla. La primera: **la versión híbrida inicial,
-con pesos iguales, resultó peor que la búsqueda semántica sola**; solo la medición lo
-detectó. La segunda: la precisión hay que leerla contra su techo, no contra 1,0. Con cinco
-fragmentos y un tope de dos por archivo, una pregunta con una sola fuente esperada no
-puede superar 2/5; el máximo alcanzable sobre el set es 0,55, de modo que el 0,44 medido
-es el 80% de lo posible.
+Dos advertencias sobre esta tabla. **La versión híbrida inicial, con pesos iguales, resultó
+peor que la búsqueda semántica sola**; solo la medición lo detectó. Y la precisión se lee
+contra su techo: con cinco fragmentos y tope de dos por archivo, una pregunta con una sola
+fuente no supera 2/5, y el máximo sobre el set es 0,55 — el 0,45 medido es el 82% de lo
+posible.
 
 **Evaluación (IE4).** Un set de 30 preguntas con la fuente esperada y una respuesta de
-referencia. La recuperación se mide sin modelo, comparando archivos recuperados contra
-esperados: es determinista y gratuita, así que corre sobre las 30 y permite comparar
-configuraciones. La generación usa un modelo como juez con una rúbrica de cinco niveles,
-verificada antes de usarla: se le dan cuatro respuestas construidas a propósito —correcta,
-incompleta, con un dato inventado y falsa— y debe ordenarlas. Las ordena; la que inventa
-un endpoint cae a 0,25 de fidelidad conservando 1,00 de relevancia. Con el juez binario
-anterior, tres variantes distintas de prompt empataban en 1,00 y no se distinguía nada.
+referencia. La recuperación se mide sin modelo y es determinista. La generación usa un
+modelo como juez con rúbrica de cinco niveles, verificada antes de usarla con cuatro
+respuestas construidas a propósito —correcta, incompleta, con un dato inventado y falsa—
+que debe ordenar. Las ordena. Resultado: **fidelidad 0,95 · relevancia 0,98**, con 26
+respuestas de fidelidad perfecta y las 30 sobre 0,75 de relevancia.
 
-Resultado sobre las 30 preguntas: **fidelidad 0,95 · relevancia 0,98**, con 26 respuestas
-de fidelidad perfecta y las 30 por encima de 0,75 de relevancia.
-
-**Una respuesta correcta puede no estar fundamentada.** Al medir las 30 aparecieron tres
-casos con fidelidad 0,00 y relevancia 1,00: el asistente respondía bien —por ejemplo, que
-OAuth 2.0 devuelve `invalid_client` cuando falla la autenticación del cliente— pero el
-término no estaba en el contexto recuperado, porque el troceo había cortado la lista de
-errores del RFC. El modelo respondió de memoria. Es exactamente el fallo que un pipeline
-RAG debe evitar y que la métrica de fidelidad existe para detectar: el conocimiento previo
-del modelo enmascaraba un hueco de recuperación. Corregido el troceo, la fidelidad global
-subió de 0,88 a 0,95.
-
-También se corrigió una respuesta de referencia del propio set, que afirmaba que el puerto
-22 estaba cerrado cuando la documentación dice lo contrario. El asistente había acertado y
-la evaluación lo penalizaba: el set de evaluación también se equivoca, y conviene revisar
-los desacuerdos antes de creerle.
+**Una respuesta correcta puede no estar fundamentada.** Al ampliar la medición de 8 a 30
+preguntas aparecieron tres casos con fidelidad 0,00 y relevancia 1,00: el asistente
+respondía bien —que OAuth 2.0 devuelve `invalid_client` cuando falla la autenticación del
+cliente— pero el término no estaba en el contexto recuperado, porque el troceo había
+cortado la lista de errores del RFC. Respondió de memoria. Es el fallo que un pipeline RAG
+debe evitar y que la fidelidad existe para detectar: el conocimiento previo del modelo
+enmascaraba un hueco de recuperación. Corregido el troceo, 0,88 → 0,95.
 
 **Coherencia entre datos y respuestas.** El corpus contenía una contradicción real: el
-README de Pedidos360 afirma dos veces que el frontend es «SPA React + Vite» cuando es
-Angular. Preguntado por el framework, el asistente respondió **Angular**, correctamente,
-teniendo el fragmento equivocado en el contexto. Pero **no mencionó** que una de sus
-fuentes lo contradice: resolvió el conflicto en silencio. Acertó sin haber detectado el
-desacuerdo, y con la distribución de fragmentos invertida nada garantiza el mismo
-resultado. La evidencia está en `evaluacion/evidencias/`.
+README afirma dos veces que el frontend es «SPA React + Vite» cuando es Angular.
+Preguntado, el asistente respondió **Angular**, correctamente, teniendo el fragmento
+equivocado en el contexto. Pero **no mencionó** que una fuente lo contradice: resolvió el
+conflicto en silencio, y con la distribución invertida nada garantiza el mismo resultado.
+También se corrigió una respuesta de referencia del propio set, que afirmaba cerrado un
+puerto que la documentación da por abierto: el set de evaluación también se equivoca.
 
 ## D. Arquitectura de la solución (IE5, IE6)
 
 ![Arquitectura de la solución](../docs/arquitectura.svg)
 
-*Figura 1. Arquitectura del asistente. Trazo continuo: componentes propios. Trazo
-discontinuo: sistema externo.*
+*Figura 1. Arquitectura del asistente. Trazo continuo: componentes propios; discontinuo:
+sistema externo.*
 
-La solución se organiza en los tres módulos del indicador:
-
-**Recuperación.** Los dos corpus se trocean e indexan en paralelo en un índice vectorial
-FAISS y uno léxico TF-IDF. Ante una consulta se buscan ambos y se fusionan sus rankings,
-entregando cinco fragmentos numerados y citables.
-
-**Procesamiento.** Un agente con tres herramientas —`buscar_documentacion`,
-`consultar_pedidos` y `consultar_catalogo`— decide cuál usar. **El enrutamiento no está
-cableado con reglas**: se declaran las herramientas y el modelo elige. Es lo que permite
-resolver una pregunta mixta como «¿cómo obtengo el listado por API y cuántos llevo?», que
-necesita documentación *y* estado actual, y es la razón de usar un agente y no un RAG
-plano.
-
-**Generación.** El modelo redacta citando los fragmentos; la salida pasa por un filtro que
-elimina identificadores de instancia, GUID de tenant, IP públicas, tokens y credenciales
-de prueba, que aparecen legítimamente en el corpus pero no deben llegar al usuario.
+La solución se organiza en los tres módulos del indicador. **Recuperación:** los dos
+corpus se trocean e indexan en paralelo en un índice vectorial y uno léxico; ante una
+consulta se buscan ambos y se fusionan sus rankings, entregando cinco fragmentos citables.
+**Procesamiento:** un agente con tres herramientas —`buscar_documentacion`,
+`consultar_pedidos` y `consultar_catalogo`— decide cuál usar; el enrutamiento no está
+cableado con reglas, y es lo que permite resolver una pregunta mixta como «¿cómo obtengo
+el listado por API y cuántos llevo?», que necesita documentación *y* estado actual. Ese
+caso es la razón de usar un agente y no un RAG plano, y está detallado en el boceto de
+secuencia del repositorio. **Generación:** el modelo redacta citando los fragmentos y la
+salida pasa por un filtro que elimina identificadores de infraestructura, tokens y
+credenciales, que aparecen legítimamente en el corpus pero no deben llegar al usuario.
 
 El asistente **no modifica Pedidos360**: lo consume como cualquier comercio integrado,
-autenticándose por el mismo mecanismo OAuth 2.0, con la URL parametrizada para poder
-apuntar al despliegue en AWS o a un entorno local equivalente.
+autenticándose por el mismo mecanismo OAuth 2.0, con la URL parametrizada para apuntar al
+despliegue en AWS o a un entorno local equivalente.
 
 ## E. Documentación técnica: justificación de decisiones (IE7, IE8)
 
