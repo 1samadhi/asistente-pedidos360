@@ -38,6 +38,16 @@ API key y funcionan sin conexión. La primera ejecución descarga ~470 MB y los 
 
 ---
 
+## Dos formas de usarlo
+
+**`recorrido.ipynb`** — el notebook de demostración. Recorre el sistema pieza por pieza:
+el corpus, el troceo, la comparación entre búsqueda densa e híbrida, las herramientas en
+vivo, el agente decidiendo, el guardrail y las métricas. No duplica lógica: importa los
+módulos de `asistente/`. Funciona en Jupyter local y en Colab, y viene ya ejecutado, así
+que se puede leer sin correr nada.
+
+**La línea de comandos** — para usarlo de verdad, y lo que documentan estas instrucciones.
+
 ## Puesta en marcha
 
 ```bash
@@ -90,6 +100,7 @@ docker compose -f docker-compose.yml -f docker-compose.local.yml up --build -d
 ## Estructura
 
 ```
+recorrido.ipynb    Notebook de demostración: recorre el sistema paso a paso
 corpus/
   interno/     Documentación de Pedidos360 · 10 archivos, 7.210 palabras
                (9 preexistentes + 09-errores-frecuentes.md, escrito en este proyecto)
