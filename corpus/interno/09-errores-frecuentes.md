@@ -11,6 +11,44 @@ sistema, porque es así como llega la consulta.
 
 ---
 
+## Cómo obtengo un token, según el emisor
+
+Pedidos360 acepta tres emisores y cada uno se pide distinto. Cuál necesitas depende de la
+ruta: las de negocio exigen Entra ID (ver el apartado siguiente).
+
+### Token del IdP propio (`ms-auth`)
+
+Un POST con usuario y contraseña en JSON, y nada más. **No lleva `client_id`, `scope` ni
+`grant_type`**: `/auth/login` no es un endpoint de OAuth estándar, es el login del IdP.
+Enviarle los parámetros de OAuth es el error más común al integrarse.
+
+```bash
+curl -X POST "$BASE/auth/login" \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"..."}'
+```
+
+Devuelve `{"access_token": "..."}`, firmado en RS256, con `iss` igual a la URL del stage
+del API Gateway y audiencia `exp1-api`. Sirve para `/auth/userinfo` y para llamar a los
+microservicios directamente.
+
+### Token de Microsoft Entra ID
+
+Es el que necesitan las rutas de negocio. Aquí sí es OAuth estándar, con `grant_type`:
+
+```bash
+curl -X POST "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
+  -d "client_id=$CLIENT_ID" -d "scope=$APP_ID_URI/.default" \
+  -d "username=$USUARIO" -d "password=$PASSWORD" -d "grant_type=password"
+```
+
+### Token de Amazon Cognito
+
+Flujo `client_credentials`, de máquina a máquina, contra el dominio del user pool. No hay
+usuario de por medio.
+
+---
+
 ## 401 Unauthorized en `/v1/pedidos` o `/v1/productos` con un token que parece válido
 
 **Síntoma.** Obtienes un token de `POST /auth/login`, el token trae el `iss` correcto, la

@@ -21,6 +21,7 @@ from asistente import config
 from asistente.ingesta import embeddings
 
 K_RRF = 60  # constante habitual de RRF; amortigua el peso de los primeros puestos
+PESO_CARACTERES = 1.0  # peso del bloque de n-gramas frente al de palabras (ver abajo)
 
 _lexico = None
 
@@ -41,19 +42,31 @@ class RecuperadorLexico:
     Se indexa por palabras y por n-gramas de caracteres: lo primero atrapa
     terminos como "autorizador", lo segundo rutas y codigos como "/v1/pedidos"
     o "401", que un tokenizador por palabras parte o descarta.
+
+    Los dos bloques se pueden ponderar, pero el peso resulto no importar. Se
+    sospecho que el bloque de caracteres, con muchas mas features, aplastaba al
+    de palabras y por eso la pregunta "que es Broken Object Level Authorization"
+    no encontraba esa frase literal presente tal cual en el corpus. Se midio el
+    peso entre 0.0 y 1.0 sobre las 30 preguntas y la diferencia fue nula: la
+    causa real era otra, el copamiento del resultado por un solo archivo, que se
+    corrige con el tope de recuperar_hibrido(). El parametro se conserva porque
+    documenta esa hipotesis descartada.
     """
 
-    def __init__(self, fragmentos: list[dict]):
+    def __init__(self, fragmentos: list[dict], peso_caracteres: float = PESO_CARACTERES):
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.pipeline import FeatureUnion
 
         self.fragmentos = fragmentos
         textos = [f["texto"] for f in fragmentos]
-        self.vectorizador = FeatureUnion([
-            ("palabras", TfidfVectorizer(sublinear_tf=True, lowercase=True)),
-            ("caracteres", TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5),
-                                           sublinear_tf=True, lowercase=True)),
-        ])
+        self.vectorizador = FeatureUnion(
+            [
+                ("palabras", TfidfVectorizer(sublinear_tf=True, lowercase=True)),
+                ("caracteres", TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5),
+                                               sublinear_tf=True, lowercase=True)),
+            ],
+            transformer_weights={"palabras": 1.0, "caracteres": peso_caracteres},
+        )
         self.matriz = self.vectorizador.fit_transform(textos)
 
     def buscar(self, consulta: str, k: int) -> list[int]:
@@ -82,16 +95,22 @@ def recuperar(pregunta: str, k: int | None = None, almacen: FAISS | None = None)
 
 def recuperar_hibrido(pregunta: str, k: int = 5, min_interno: int = 0,
                       peso_lexico: float = 0.8, peso_denso: float = 0.2,
+                      max_por_archivo: int = 2,
                       almacen: FAISS | None = None) -> list[Document]:
     """Fusiona la busqueda semantica y la lexica con Reciprocal Rank Fusion.
 
     Los pesos no son una intuicion: salen de medir sobre evaluacion/preguntas.jsonl.
 
         estrategia                recall  precision  sin fuente
-        densa sola                  0.77       0.58           4
-        lexica sola                 0.87       0.53           2
+        densa sola                  0.78       0.59           3
         hibrida 0.5/0.5             0.78       0.51           4
-        hibrida 0.8/0.2  <- elegida 0.85       0.61           3
+        hibrida 0.8/0.2  <- elegida 0.92       0.44           0
+
+    La precision hay que leerla contra su techo, no contra 1.0: con k=5 y un tope
+    de 2 fragmentos por archivo, una pregunta con una sola fuente esperada no
+    puede pasar de 2/5. Promediando el set, el maximo alcanzable es 0.55, asi que
+    el 0.44 medido es el 80% de lo posible. Subir esa cifra exigiria cambiar el
+    tope o el etiquetado del set, no el recuperador.
 
     Con pesos iguales la fusion resulta peor que la densa sola, que es lo que
     hacia la primera version. El corpus es pequeno y muy tecnico, y las preguntas
@@ -129,7 +148,38 @@ def recuperar_hibrido(pregunta: str, k: int = 5, min_interno: int = 0,
 
     ordenados = sorted(puntos, key=lambda c: -puntos[c])
 
-    elegidos = [c for c in ordenados if docs[c].metadata["origen"] == "interno"][:min_interno]
+    # Tope por archivo. Sin el, un solo documento copa el resultado: la pregunta
+    # por el flujo OAuth del frontend devolvia cuatro de cinco fragmentos del
+    # README, porque su titulo contiene "OIDC y OAuth 2.0" y el troceo antepone
+    # ese encabezado a sus veintidos fragmentos. El encabezado, que resolvio la
+    # pregunta del 401, aqui produce falsos positivos; el tope los acota sin
+    # renunciar a el.
+    vistos: dict[str, int] = {}
+
+    def cabe(c) -> bool:
+        return vistos.get(docs[c].metadata["archivo"], 0) < max_por_archivo
+
+    def anotar(c) -> None:
+        arch = docs[c].metadata["archivo"]
+        vistos[arch] = vistos.get(arch, 0) + 1
+
+    elegidos = []
+    for c in ordenados:
+        if len(elegidos) >= min_interno:
+            break
+        if docs[c].metadata["origen"] == "interno" and cabe(c):
+            elegidos.append(c)
+            anotar(c)
+
+    for c in ordenados:
+        if len(elegidos) >= k:
+            break
+        if c not in elegidos and cabe(c):
+            elegidos.append(c)
+            anotar(c)
+
+    # Si el tope dejo el resultado corto, se completa ignorandolo: es preferible
+    # un contexto algo repetitivo a uno incompleto.
     for c in ordenados:
         if len(elegidos) >= k:
             break
