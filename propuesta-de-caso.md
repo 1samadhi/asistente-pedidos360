@@ -207,7 +207,7 @@ Consultables vía API autenticada, verificados al momento de escribir esta propu
 
 - Microservicios: `https://github.com/1samadhi/cloud-exp1-oidc`
 - Frontend: `https://github.com/1samadhi/cloud-exp1-front-angular`
-- *[Pendiente]* Repositorio del asistente (entregable de esta evaluación).
+- Asistente (entregable de esta evaluación): `https://github.com/1samadhi/Ingenier-a-de-Soluciones-con-Inteligencia-Artificial/tree/main/EP1-asistente-pedidos360`
 
 **Sistema en operación**
 
