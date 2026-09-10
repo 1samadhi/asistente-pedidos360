@@ -25,6 +25,10 @@ CORPUS = RAIZ / "corpus"
 INDICE = RAIZ / "indice"
 TAMANO_CHUNK = int(os.getenv("TAMANO_CHUNK", "900"))
 SOLAPE_CHUNK = int(os.getenv("SOLAPE_CHUNK", "150"))
+# Los RFC son texto plano con listas indentadas largas y sin encabezados internos:
+# con 900 caracteres se parten las definiciones de error a mitad de frase, y el
+# fragmento llega al modelo sin el termino que define. Se les da mas aire.
+TAMANO_CHUNK_EXTERNO = int(os.getenv("TAMANO_CHUNK_EXTERNO", "1600"))
 K_RECUPERACION = int(os.getenv("K_RECUPERACION", "5"))
 
 # --- API de Pedidos360 ---

@@ -1,12 +1,229 @@
 {
   "recuperacion": {
     "solo semantica": {
-      "recall": 0.7833333333333333,
-      "precision": 0.5933333333333334
+      "recall": 0.8,
+      "precision": 0.58
     },
     "hibrida ponderada": {
       "recall": 0.9166666666666666,
-      "precision": 0.44
+      "precision": 0.4466666666666667
     }
+  },
+  "generacion": {
+    "n": 30,
+    "fidelidad": 0.95,
+    "relevancia": 0.9833333333333333,
+    "detalle": [
+      {
+        "id": 1,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Tengo un token valido de ms-auth con los scopes correctos pero /v1/pedidos me devuelve 401. Por que?",
+        "respuesta": "El 401 ocurre porque las rutas de negocio (`/v1/pedidos`, `/v1/productos`) están protegidas por el **autorizador de Microsoft Entra ID** y solo aceptan tokens emitidos por ese emisor.  \nAunque tu token sea válido, tenga el `iss` correcto, la audiencia `exp1‑api` y los scopes necesarios, al provenir de `ms‑auth` es rechazado en el borde antes de llegar al microservicio — el autorizador solo valida un único emisor y no reconoce el tuyo【1†L1-L9】.  \n\nEn resumen, el token de `ms‑auth` no es aceptado por el autorizador configurado para esas rutas, por lo que la API responde 401 Unauthorized."
+      },
+      {
+        "id": 2,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que scope necesito para crear un pedido?",
+        "respuesta": "Para crear un pedido debes solicitar el scope **`pedidos.escribir`** (o disponer del rol `ADMIN`). [5]"
+      },
+      {
+        "id": 3,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Como obtengo un token del IdP propio de Pedidos360?",
+        "respuesta": "Para obtener un token del IdP propio de Pedidos360 debes hacer un **POST** al endpoint `/auth/login` enviando solo el usuario y la contraseña en JSON, sin incluir `client_id`, `scope` ni `grant_type`【2】.  \n\nEjemplo:\n\n```bash\ncurl -X POST \"$BASE/auth/login\" \\\n     -H 'Content-Type: application/json' \\\n     -d '{\"username\":\"admin\",\"password\":\"...\"}'\n```\n\nLa respuesta será `{\"access_token\":\"...\"}` firmado con RS256, con `iss` igual a la URL del stage del API Gateway y audiencia `exp1-api`. Este token puede usarse en `/auth/userinfo` y para llamar directamente a los microservicios."
+      },
+      {
+        "id": 4,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Por que el sistema usa RS256 y no HS256 para firmar los tokens?",
+        "respuesta": "El sistema firmó los tokens con **RS256** porque el API Gateway de AWS valida la firma usando claves públicas publicadas en un JWKS. Con RS256 (algoritmo asimétrico) el gateway puede verificar la firma sin conocer ningún secreto compartido, mientras que HS256 (simétrico) requeriría que el gateway tuviera el mismo secreto que el emisor, lo que no es posible en esta arquitectura. Por eso se abandonó HS256 y se adoptó RS256 con un par de claves RSA de 2048 bits【2】."
+      },
+      {
+        "id": 5,
+        "fidelidad": 0.75,
+        "relevancia": 1.0,
+        "pregunta": "Que emisores de identidad acepta la plataforma?",
+        "respuesta": "La plataforma acepta los siguientes emisores de identidad:\n\n- **ms‑auth** (propio) – firma RS256 y JWKS publicado por el gateway.  \n- **Amazon Cognito** – autenticación máquina a máquina.  \n- **Microsoft Entra ID** – login de usuarios desde el frontend.  \n\n[2]"
+      },
+      {
+        "id": 6,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Recibo 503 en todas las rutas del gateway. Que reviso?",
+        "respuesta": "Para un **503 Service Unavailable en todas las rutas** lo primero que debes verificar es la configuración del API Gateway:\n\n1. **Dirección del backend** – El gateway sigue apuntando a la IP pública que tenía la instancia EC2 cuando se creó la integración. Si la instancia se reinició y cambió de IP, esa dirección ya no responde y el gateway devuelve 503 en todas las rutas.  \n2. **Actualiza la integración** – Ejecuta el script `scripts/actualizar‑api‑gateway.sh`, que detecta la IP actual de la instancia y actualiza todas las rutas del gateway con la nueva dirección.  \n\n(Referencia: [4])"
+      },
+      {
+        "id": 7,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Llamo a /api/v1/pedidos desde internet y me da 404. Que pasa?",
+        "respuesta": "El 404 ocurre porque estás usando la ruta interna del microservicio (`/api/v1/pedidos`).  \nEl API Gateway publica esa operación bajo la ruta pública `/v1/pedidos`; al llamar a `/api/v1/pedidos` la petición no coincide con ninguna ruta del gateway y termina en la ruta comodín del frontend, devolviendo 404.  \n\n**Solución:** llama a la API usando la ruta pública `GET /v1/pedidos` (o `POST /v1/pedidos` según corresponda) en lugar de `/api/v1/pedidos`【3】."
+      },
+      {
+        "id": 8,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Cree un pedido pero no aparece cuando listo mis pedidos. Por que?",
+        "respuesta": "Los pedidos que creas solo se devuelven cuando los consultas con el mismo token de acceso con el que los creaste.  \n\n`GET /v1/pedidos` filtra por el **sub** del token, por lo que si usas otro token (por ejemplo de otro comercio o de una sesión distinta) el pedido no aparecerá en el listado. No es un error del sistema, sino el aislamiento por identidad. [2]"
+      },
+      {
+        "id": 9,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Por que el sub del token de Entra no es el correo del usuario?",
+        "respuesta": "El claim **`sub`** de los tokens emitidos por Microsoft Entra ID es un identificador **opaco y único por aplicación**, no el correo del usuario. Por eso Pedidos360 lo usa para asociar los pedidos, mientras que el correo está disponible en el claim **`preferred_username`**【2】."
+      },
+      {
+        "id": 10,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que instancia EC2 se usa y por que no una t3.micro?",
+        "respuesta": "Se despliega la plataforma en una instancia **t3.small** y no en una **t3.micro** porque la micro no dispone de memoria suficiente para los tres microservicios Spring Boot que se ejecutan en Docker.\n\n- Una `t3.micro` tiene solo 913 MB de RAM, de los que quedan ~600 MB libres. Cada JVM de Spring Boot consume entre 250 y 350 MB de RSS, sin contar metaspace, code‑cache y pilas de hilos【2†L1-L5】.  \n- Con una `t3.small` (2 GB) los tres servicios más nginx caben con holgura, y además se agrega 2 GB de swap para cubrir los picos de compilación de Maven dentro de Docker【2†L5-L7】.\n\nPor eso la arquitectura de producción utiliza `t3.small` en lugar de `t3.micro`."
+      },
+      {
+        "id": 11,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Como se accede a la instancia sin usar SSH?",
+        "respuesta": "Puedes operar la instancia mediante **AWS Systems Manager (SSM)** sin necesidad de abrir una sesión SSH. La instancia tiene asignado el perfil `LabInstanceProfile`, lo que permite iniciar una sesión SSM con el comando:\n\n```bash\naws ssm start-session --target [id-de-instancia]\n```\n\n[3]\n\n_(1 dato(s) interno(s) omitido(s) por politica.)_"
+      },
+      {
+        "id": 12,
+        "fidelidad": 1.0,
+        "relevancia": 0.75,
+        "pregunta": "Por que la base de datos esta en RDS y no en un contenedor dentro de la EC2?",
+        "respuesta": "La base de datos se aloja en **RDS MySQL** porque:\n\n* RDS administra el motor, los parches y el almacenamiento, eliminando la necesidad de gestionar la base de datos manualmente.  \n* Un contenedor MySQL dentro de la EC2 seguiría siendo un servicio autogestionado, lo que contradice la pauta que indica usar una base de datos cloud gestionada.  \n\nEn desarrollo local se puede usar un contenedor por conveniencia, pero en producción se prefiere RDS para obtener gestión automática y mayor fiabilidad【2】."
+      },
+      {
+        "id": 13,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "La base de datos es alcanzable desde internet?",
+        "respuesta": "No. La base de datos RDS MySQL no es accesible desde internet; su dirección DNS resuelve a una IP privada que no es enrutable fuera de la VPC y está configurada como **Accesible públicamente: No**【1†L1-L4】【3†L7-L10】."
+      },
+      {
+        "id": 14,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que hace el MsalGuard en el frontend?",
+        "respuesta": "El **MsalGuard** protege las rutas del frontend Angular.  \nSe declara en `app.routes.ts`, por ejemplo:\n\n```ts\n{ path: 'catalogo', component: Catalogo, canActivate: [MsalGuard] }\n```\n\nSi no hay una sesión activa, el guardia redirige al flujo de autenticación de Microsoft **antes** de que se construya el componente, evitando que haya lógica manual de comprobación de sesión. Las rutas públicas como `/` y `/registro` quedan sin protección para permitir el acceso a usuarios sin cuenta. [1][2]"
+      },
+      {
+        "id": 15,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Para que sirve el protectedResourceMap de MSAL?",
+        "respuesta": "El **protectedResourceMap** es una configuración de MSAL que asocia cada URL de la API con los *scopes* que deben enviarse. El interceptor (`MsalInterceptor`) usa este mapa para:\n\n* Detectar si la petición va a un recurso protegido.  \n* Obtener o renovar el access‑token correspondiente.  \n* Adjuntar automáticamente el token en el encabezado **Authorization**.\n\nLas URLs que no están en el mapa se envían sin token (p. ej. rutas públicas). [2]"
+      },
+      {
+        "id": 16,
+        "fidelidad": 0.75,
+        "relevancia": 1.0,
+        "pregunta": "Que flujo de OAuth usa el frontend?",
+        "respuesta": "El frontend de Pedidos360 usa **Microsoft Entra ID** y el flujo **Authorization Code con PKCE** gestionado por MSAL. No se escribe código para el intercambio; MSAL genera el `code_verifier`, envía su hash como `code_challenge` y lo usa al canjear el código de autorización. [3][4]"
+      },
+      {
+        "id": 17,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Por que el registro de la aplicacion en Entra no debe ser de tipo web?",
+        "respuesta": "El registro de la aplicación en Microsoft Entra ID debe ser del tipo **SPA (Single‑Page Application)** y no de tipo **Web** porque la aplicación cliente de Pedidos360 es una SPA escrita en Angular que se ejecuta totalmente en el navegador.  \n\n- En una SPA no puede almacenarse ningún secreto (el código JavaScript es público), por lo que el flujo de autorización que se usa es **Authorization Code con PKCE**. PKCE permite que el cliente genere un `code_verifier` y un `code_challenge` sin necesidad de un cliente‑secret, evitando que un código interceptado sea reutilizable【5】.  \n- Si la aplicación se registrara como “Web”, Entra esperaría que el cliente tuviera un **client secret** y usaría el flujo tradicional de Authorization Code, lo que no es posible ni seguro en un entorno sin backend que proteja el secreto.  \n\nPor eso el registro debe ser de tipo SPA (no web) para que la autenticación funcione correctamente con PKCE y sin secretos."
+      },
+      {
+        "id": 18,
+        "fidelidad": 0.5,
+        "relevancia": 1.0,
+        "pregunta": "Como se consigue que Entra emita tokens v2 en vez de v1?",
+        "respuesta": "Para que Microsoft Entra ID emita tokens **v2** en lugar de **v1** debes actualizar la versión solicitada del token en la aplicación registrada:\n\n```bash\naz rest --method PATCH \\\n  --uri \"https://graph.microsoft.com/v1.0/applications/<APP_OBJECT_ID>\" \\\n  --body '{\"api\":{\"requestedAccessTokenVersion\":2}}'\n```\n\nCon `requestedAccessTokenVersion` = 2, el emisor del token pasa a  \n`https://login.microsoftonline.com/<tenant>/v2.0`, que es el formato esperado por los recursos de Pedidos360【4】."
+      },
+      {
+        "id": 19,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que tipo de cliente de Cognito se usa y con que flujo?",
+        "respuesta": "Se usa un **cliente de máquina a máquina** de Amazon Cognito configurado con el flujo **client_credentials**【1†L4-L7】【2†L4-L7】."
+      },
+      {
+        "id": 20,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Por que el issuer del IdP propio es la URL del stage del API Gateway?",
+        "respuesta": "El issuer del IdP propio se define como la URL del stage del API Gateway porque :\n\n1. El autorizador JWT de API Gateway necesita acceder al **discovery** del emisor mediante **HTTPS público**.  \n2. El microservicio `ms‑auth` (el IdP) se ejecuta dentro de la EC2 solo por **HTTP** y está detrás del gateway.  \n3. La única URL pública con HTTPS disponible es la del propio **stage** del API Gateway.  \n\nPor eso `ms‑auth` se inicia con `OIDC_ISSUER` igual a esa URL, firma los tokens con ese `iss`, y publica las rutas `/.well-known/*` sin autorizador para que AWS pueda leerlas. El flujo correcto es crear la API y el stage, usar su URL como issuer, desplegar `ms‑auth` y luego crear el autorizador JWT. [3]"
+      },
+      {
+        "id": 21,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Puede una misma ruta aceptar tokens de dos emisores distintos?",
+        "respuesta": "No. En el API Gateway cada ruta solo puede estar asociada a **un** autorizador JWT, y ese autorizador valida un único emisor [4]. Por eso una misma ruta no puede aceptar simultáneamente tokens de dos emisores diferentes.  \n\nSi se necesita admitir varios emisores, la solución es crear **autorizadores adicionales** y asociarlos a rutas distintas, o bien delegar la validación multi‑emisor al microservicio después del borde [4]."
+      },
+      {
+        "id": 22,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que significa el claim aud de un JWT?",
+        "respuesta": "El claim **`aud`** (audience) identifica a los destinatarios para los que el JWT está destinado. Cada entidad que procese el token debe reconocer su propio identificador dentro de este claim; si no lo encuentra, el token debe ser rechazado. Es opcional y puede ser una cadena o un arreglo de cadenas sensibles a mayúsculas/minúsculas【2】."
+      },
+      {
+        "id": 23,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que dice el estandar sobre el claim iss?",
+        "respuesta": "El estándar JWT (RFC 7519) define el claim **“iss”** (Issuer) como:\n\n- Identifica al principal que emitió el JWT.  \n- Es una cadena sensible a mayúsculas/minúsculas que contiene un **StringOrURI**.  \n- Su uso es **OPCIONAL** y el procesamiento suele ser específico de la aplicación【1】."
+      },
+      {
+        "id": 24,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que es el flujo client credentials en OAuth 2.0?",
+        "respuesta": "El flujo **client‑credentials** es un grant de OAuth 2.0 en el que una aplicación (cliente) se autentica directamente con el servidor de autorización usando sus propias credenciales (ID y secreto) y recibe un token de acceso sin intervención de un usuario. Este token se usa luego para llamar a recursos protegidos en nombre de la propia aplicación, típicamente en escenarios máquina‑a‑máquina. [1]"
+      },
+      {
+        "id": 25,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que error devuelve OAuth 2.0 cuando falla la autenticacion del cliente?",
+        "respuesta": "El error que devuelve el servidor de autorización cuando falla la autenticación del cliente es **`invalid_client`**. Puede acompañarse de un código HTTP 401 (Unauthorized) y del encabezado `WWW-Authenticate` que indica el esquema de autenticación admitido【2】."
+      },
+      {
+        "id": 26,
+        "fidelidad": 0.5,
+        "relevancia": 0.75,
+        "pregunta": "Que recomienda el estandar sobre la vida util de los access token?",
+        "respuesta": "El estándar OAuth 2.0 no fija un tiempo concreto para la vida útil de los access token; recomienda que sea **corta** y que, cuando expire, se obtenga uno nuevo mediante un refresh token u otro flujo de autorización [1]."
+      },
+      {
+        "id": 27,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que es Broken Object Level Authorization segun OWASP?",
+        "respuesta": "Broken Object Level Authorization (API1:2023) es una vulnerabilidad en la que una API expone endpoints que manejan identificadores de objetos sin aplicar controles de autorización adecuados. Esto permite que un atacante acceda o manipule recursos a los que no debería tener permiso simplemente cambiando el ID del objeto en la solicitud【4†L1-L4】."
+      },
+      {
+        "id": 28,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que riesgo de OWASP cubre la autenticacion mal implementada?",
+        "respuesta": "La autenticación mal implementada está cubierta por el riesgo **API2:2023 – Broken Authentication** de OWASP API Security Top 10【2】."
+      },
+      {
+        "id": 29,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que pasos hay que seguir al retomar el laboratorio de AWS?",
+        "respuesta": "Para retomar el laboratorio de AWS debes:\n\n1. **Encender la instancia** que quedó detenida.  \n   ```bash\n   aws ec2 start-instances --instance-ids <id‑instancia>\n   ```\n\n2. **Actualizar el API Gateway** con la nueva IP pública que asignó la instancia.  \n   ```bash\n   ./scripts/actualizar‑api‑gateway.sh <id‑gateway> <id‑instancia>\n   ```\n\n3. Los contenedores se reinician automáticamente (policy `restart: unless‑stopped`).  \n\n4. Si las credenciales de AWS Academy expiraron, copia las nuevas a `~/.aws/credentials` antes de ejecutar los comandos.\n\nFuente: documentación de la rutina al retomar el laboratorio【2】."
+      },
+      {
+        "id": 30,
+        "fidelidad": 1.0,
+        "relevancia": 1.0,
+        "pregunta": "Que puertos abre el Security Group de la instancia?",
+        "respuesta": "Los puertos que abre el Security Group asociado a la instancia son:\n\n| Puerto | Motivo |\n|--------|--------|\n| **22** | SSH con `vockey` |\n| **80** | nginx del frontend |\n| **9000** | microservicio **ms‑auth** |\n| **8081** | microservicio **ms‑productos** |\n| **8082** | microservicio **ms‑pedidos** |\n\n[1]"
+      }
+    ]
   }
 }

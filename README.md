@@ -141,10 +141,13 @@ configuraciones. Resultados actuales:
 
 | Estrategia | Context recall | Context precision | Sin ninguna fuente |
 |---|---:|---:|---:|
-| Solo semántica | 0,77 | 0,58 | 4 |
-| Léxica sola | 0,87 | 0,53 | 2 |
+| Solo semántica | 0,80 | 0,58 | 2 |
 | Híbrida 0,5/0,5 | 0,78 | 0,51 | 4 |
-| **Híbrida 0,8/0,2** (elegida) | **0,85** | **0,61** | **3** |
+| **Híbrida 0,8/0,2 con tope por archivo** | **0,92** | **0,45** | **0** |
+
+La precisión se lee contra su techo: con `k=5` y un tope de dos fragmentos por archivo,
+una pregunta con una sola fuente esperada no puede pasar de 2/5. El máximo alcanzable
+sobre el set es 0,55, así que 0,45 es el 82% de lo posible.
 
 El camino hasta ahí está documentado en `asistente/recuperador.py`, y no fue recto: la
 primera versión híbrida, con pesos iguales y cuota fija por origen, resultó **peor** que
@@ -152,13 +155,18 @@ la búsqueda semántica sola (precisión 0,35). La medición es lo que lo detect
 
 ### Generación
 
-Fidelidad y relevancia se evalúan con un modelo como juez, lo que consume cuota, así que
-corren sobre una submuestra. Sobre 8 preguntas: **fidelidad 1,00 · relevancia 1,00**.
+Fidelidad y relevancia se evalúan con un modelo como juez, con una rúbrica de cinco
+niveles. Sobre las 30 preguntas: **fidelidad 0,95 · relevancia 0,98**, con 26 respuestas de
+fidelidad perfecta y las 30 por encima de 0,75 de relevancia.
 
-> **Limitación del método.** El juez devuelve 0 o 1 y no valores intermedios —verificado
-> dándole respuestas deliberadamente incorrectas, que puntúa 0—, así que discrimina entre
-> respuesta buena y mala pero no gradúa la calidad. Un 1,00 con esta métrica significa
-> «ninguna respuesta de la muestra fue incorrecta», no «no hay nada que mejorar».
+`python -m evaluacion.calibrar_juez` verifica que la rúbrica discrimina antes de usarla:
+le da cuatro respuestas construidas a propósito —correcta, incompleta, con un dato
+inventado y falsa— y exige que las ordene.
+
+> **Medir de más importa.** Sobre una muestra de 8 preguntas la fidelidad daba 1,00. Al
+> ampliar a las 30 bajó a 0,88, revelando tres respuestas correctas pero **no
+> fundamentadas**: el modelo las sabía de memoria y el contexto recuperado no las
+> respaldaba, porque el troceo cortaba las listas de los RFC. Corregido eso, 0,95.
 
 ### Otras limitaciones declaradas
 
@@ -166,9 +174,10 @@ corren sobre una submuestra. Sobre 8 preguntas: **fidelidad 1,00 · relevancia 1
   vocabulario literal con ellos más de lo que lo haría un usuario real preguntando con
   sus palabras. Eso favorece a la búsqueda léxica y probablemente sobreestima el recall.
   Por eso la configuración elegida conserva peso semántico.
-- **El *recall* se mide contra una lista de archivos esperados escrita a mano.** Cuando la
-  respuesta aparece legítimamente en otro documento, se cuenta como fallo aunque el
-  asistente responda bien: es lo que ocurre con la pregunta 16.
+- **El *recall* se mide contra una lista de archivos esperados escrita a mano**, que
+  también puede equivocarse: una respuesta de referencia afirmaba que el puerto 22 estaba
+  cerrado cuando la documentación dice lo contrario, y penalizaba al asistente por
+  acertar. Conviene revisar los desacuerdos antes de creerle al set.
 
 ## Seguridad
 

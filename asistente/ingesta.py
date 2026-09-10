@@ -64,14 +64,17 @@ def trocear(docs: list[Document]) -> list[Document]:
         headers_to_split_on=[("#", "h1"), ("##", "h2"), ("###", "h3")],
         strip_headers=False,
     )
-    divisor = RecursiveCharacterTextSplitter(
-        chunk_size=config.TAMANO_CHUNK,
-        chunk_overlap=config.SOLAPE_CHUNK,
-        separators=["\n\n", "\n", " ", ""],
-    )
+    def divisor_para(origen: str) -> RecursiveCharacterTextSplitter:
+        return RecursiveCharacterTextSplitter(
+            chunk_size=(config.TAMANO_CHUNK_EXTERNO if origen == "externo"
+                        else config.TAMANO_CHUNK),
+            chunk_overlap=config.SOLAPE_CHUNK,
+            separators=["\n\n", "\n", " ", ""],
+        )
 
     trozos = []
     for doc in docs:
+        divisor = divisor_para(doc.metadata["origen"])
         for seccion in por_encabezado.split_text(doc.page_content):
             ruta = " > ".join(
                 seccion.metadata[h] for h in ("h1", "h2", "h3") if h in seccion.metadata
