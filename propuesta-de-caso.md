@@ -5,7 +5,7 @@ Asistente de integración para Pedidos360
 
 | | |
 |---|---|
-| **Equipo** | Ismael Oyarzún (isma.oyarzun@duocuc.cl) + *[completar compañero/a]* |
+| **Equipo** | Ismael Oyarzún (isma.oyarzun@duocuc.cl) · Felipe Angel |
 | **Fecha** | Septiembre 2026 |
 | **Indicadores** | IL1.1, IL1.2, IL1.3, IL1.4 |
 

@@ -1,7 +1,7 @@
 # Asistente de integración para Pedidos360: diseño de una solución con LLM y RAG
 
 **Evaluación Parcial N°1 — ISY0101 Ingeniería de Soluciones con IA**
-Ismael Oyarzún · *[nombre del compañero/a]* — Duoc UC, septiembre de 2026
+Ismael Oyarzún · Felipe Angel — Duoc UC, septiembre de 2026
 
 > **Nota para el equipo, borrar antes de entregar.** Los apartados **E** y **F** están sin
 > redactar a propósito: la pauta prohíbe usar IA para justificaciones técnicas,

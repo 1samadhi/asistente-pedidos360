@@ -125,6 +125,8 @@ evaluacion/
 docs/
   arquitectura.svg                  Diagrama de la solución
   boceto-secuencia-consulta-mixta.svg   Boceto: cómo se resuelve una consulta mixta
+presentacion/
+  EP1-...pptx            Presentación, generada desde los datos medidos
 informe/
   informe-ep1.md         Fuente del informe
   informe-ep1.docx/.pdf  Entregable, generado desde el Markdown
@@ -132,6 +134,7 @@ scripts/
   poblar_pedidos.py      Genera pedidos de demostración vía la API
   verificar_api.py       Comprueba la API e imprime un reporte reenviable
   convertir_informe.py   Markdown → .docx y .pdf
+  generar_ppt.py         Genera la presentación desde resultados.json
 indice/            Índice FAISS y léxico — se genera, no se versiona
 ```
 
