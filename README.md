@@ -6,7 +6,7 @@ Asistente conversacional que responde las consultas técnicas de los desarrollad
 integran su comercio a la API de **Pedidos360**. Combina recuperación sobre documentación
 (RAG) con consultas en vivo a la API, y decide por sí mismo cuál corresponde en cada caso.
 
-La propuesta de caso completa está en [`propuesta-de-caso.md`](propuesta-de-caso.md).
+El contexto académico —propuesta, informe y presentación— está en [`entrega/`](entrega/).
 
 ---
 
@@ -124,40 +124,42 @@ propio — los Resource Server de Spring aceptan los tres emisores.
 
 ## Estructura
 
+El repositorio separa **el producto** de **la entrega académica**: la raíz es el sistema,
+y todo lo que existe por ser una evaluación vive en `entrega/`.
+
 ```
 recorrido.ipynb    Notebook de demostración: recorre el sistema paso a paso
-corpus/
-  interno/     Documentación de Pedidos360 · 10 archivos, 7.210 palabras
-               (9 preexistentes + 09-errores-frecuentes.md, escrito en este proyecto)
-  externo/     RFC 6749, RFC 7519 y OWASP API Top 10 · 3 archivos, ~4.100 palabras
-asistente/
-  config.py        Configuración, toda por variables de entorno
-  ingesta.py       Troceo por encabezado e índice FAISS
-  recuperador.py   Recuperación híbrida: densa + léxica, fusionadas con RRF
-  herramientas.py  Consultas en vivo a la API de Pedidos360
-  guardrails.py    Redacción de identificadores de infraestructura
-  prompts.py       Las tres variantes del prompt de sistema
-  agente.py        Agente con tres herramientas
-evaluacion/
+asistente/         El sistema
+  config.py          Configuración, toda por variables de entorno
+  ingesta.py         Troceo por encabezado e índice FAISS
+  recuperador.py     Recuperación híbrida: densa + léxica, fusionadas con RRF
+  herramientas.py    Consultas en vivo a la API de Pedidos360
+  guardrails.py      Redacción de identificadores de infraestructura
+  prompts.py         Las tres variantes del prompt de sistema
+  agente.py          Agente con tres herramientas
+corpus/            Los datos que el sistema consulta
+  interno/           Documentación de Pedidos360 · 11 archivos, 7.693 palabras
+  externo/           RFC 6749, RFC 7519 y OWASP API Top 10
+evaluacion/        Cómo se comprueba que funciona
   preguntas.jsonl        Set de 30 preguntas con fuente y respuesta de referencia
   evaluar.py             Métricas de recuperación y de generación
   comparar_prompts.py    Compara las variantes de prompt
   calibrar_juez.py       Verifica que la rúbrica del juez discrimina
-  test_guardrails.py     17 pruebas del filtro de salida
+  test_guardrails.py     Pruebas del filtro de salida
+  test_modos_api.py      Pruebas de los modos gateway y directo
   capturar_evidencia.py  Ejecuta las pruebas y guarda su salida fechada
-  auditar_entregable.py  Comprueba el entregable contra la pauta
+  auditar_entregable.py  Comprueba la entrega contra la pauta
   evidencias/            Salidas guardadas como evidencia
-docs/
-  arquitectura.svg                  Diagrama de la solución
-  boceto-secuencia-consulta-mixta.svg   Boceto: cómo se resuelve una consulta mixta
-presentacion/
-  EP1-...pptx            Presentación, generada desde los datos medidos
-informe/
-  informe-ep1.md         Fuente del informe
-  informe-ep1.docx/.pdf  Entregable, generado desde el Markdown
-scripts/
+docs/              Documentación del sistema
+  arquitectura.svg                       Diagrama de la solución
+  boceto-secuencia-consulta-mixta.svg    Cómo se resuelve una consulta mixta
+scripts/           Utilidades de operación
   poblar_pedidos.py      Genera pedidos de demostración vía la API
   verificar_api.py       Comprueba la API e imprime un reporte reenviable
+entrega/           Solo lo académico — no forma parte del sistema
+  propuesta-de-caso.md/.html
+  informe/               El informe y sus formatos entregables
+  presentacion/          Diapositivas y sus diagramas
   convertir_informe.py   Markdown → .docx y .pdf
   generar_ppt.py         Genera la presentación desde resultados.json
 indice/            Índice FAISS y léxico — se genera, no se versiona
@@ -166,7 +168,7 @@ indice/            Índice FAISS y léxico — se genera, no se versiona
 El corpus externo son **extractos de las secciones pertinentes** de cada fuente, con la
 URL del documento completo en la cabecera de cada archivo. Se acota a propósito: incluir
 los RFC íntegros (29.000 palabras en inglés) desbalancearía la recuperación frente a las
-7.210 palabras de documentación propia en español.
+7.693 palabras de documentación propia en español.
 
 ---
 
@@ -258,7 +260,7 @@ Las trazas aparecen en el proyecto `asistente-pedidos360` del panel de LangSmith
 ```bash
 uv run python -m evaluacion.auditar_entregable   # ¿falta algo que exija la pauta?
 uv run python -m evaluacion.capturar_evidencia   # regenera la evidencia fechada
-uv run python scripts/convertir_informe.py       # regenera .docx y .pdf
+uv run --extra docs python entrega/convertir_informe.py   # regenera .docx y .pdf
 ```
 
 La auditoría comprueba que existan los siete elementos de la propuesta y los siete

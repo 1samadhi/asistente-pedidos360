@@ -18,7 +18,7 @@ from pptx.enum.text import PP_ALIGN
 from pptx.util import Emu, Inches, Pt
 
 RAIZ = Path(__file__).resolve().parent.parent
-SALIDA = RAIZ / "presentacion" / "EP1-asistente-pedidos360.pptx"
+SALIDA = RAIZ / "entrega" / "presentacion" / "EP1-asistente-pedidos360.pptx"
 
 TINTA   = RGBColor(0x1B, 0x24, 0x30)
 SUAVE   = RGBColor(0x5B, 0x66, 0x72)
@@ -138,14 +138,14 @@ def main():
     # ── 4. Diagrama del pipeline ─────────────────────────────────
     s = nueva(prs)
     titulo_slide(s, "Cómo se responde una pregunta")
-    imagen_centrada(s, RAIZ / "docs" / "slide-pipeline.png", Inches(2.05))
+    imagen_centrada(s, RAIZ / "entrega" / "presentacion" / "slide-pipeline.png", Inches(2.05))
     nota(s, "PREGUNTAS A RESPONDER: ¿por qué RAG y no el modelo respondiendo de memoria? "
             "¿Por qué los embeddings corren en local?")
 
     # ── 5. Diagrama del agente ───────────────────────────────────
     s = nueva(prs)
     titulo_slide(s, "El modelo elige la herramienta")
-    imagen_centrada(s, RAIZ / "docs" / "slide-decision.png", Inches(1.95))
+    imagen_centrada(s, RAIZ / "entrega" / "presentacion" / "slide-decision.png", Inches(1.95))
     nota(s, "PREGUNTA A RESPONDER: ¿qué gana la organización con un agente que decide, "
             "frente a un menú de opciones fijo?")
 

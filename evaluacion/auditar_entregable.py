@@ -41,7 +41,7 @@ def main() -> int:
 
     # --- 1. Propuesta de caso: los siete elementos minimos ---
     print("Propuesta de caso · elementos minimos que exige la pauta")
-    prop = leer(RAIZ / "propuesta-de-caso.md")
+    prop = leer(RAIZ / "entrega" / "propuesta-de-caso.md")
     for n, clave in [
         (1, "Nombre y breve descripción de la organización"),
         (2, "Identificación y descripción del problema"),
@@ -55,7 +55,7 @@ def main() -> int:
 
     # --- 2. Informe: los apartados A-G ---
     print("\nInforme · apartados que exige la pauta")
-    inf = leer(RAIZ / "informe" / "informe-ep1.md")
+    inf = leer(RAIZ / "entrega" / "informe" / "informe-ep1.md")
     for letra, titulo in [
         ("A", "Análisis del caso organizacional"),
         ("B", "Formulación de prompts"),
@@ -78,8 +78,8 @@ def main() -> int:
     ev = RAIZ / "evaluacion" / "evidencias"
     marcar(ev.exists() and len(list(ev.glob("*"))) >= 2, "evidencia de las pruebas ejecutadas",
            detalle="hace falta la salida de una ejecución, no solo el código")
-    marcar((RAIZ / "informe" / "informe-ep1.md").exists(), "informe")
-    entregable = list((RAIZ / "informe").glob("*.pdf")) + list((RAIZ / "informe").glob("*.docx"))
+    marcar((RAIZ / "entrega" / "informe" / "informe-ep1.md").exists(), "informe")
+    entregable = list((RAIZ / "entrega" / "informe").glob("*.pdf")) + list((RAIZ / "entrega" / "informe").glob("*.docx"))
     marcar(bool(entregable), "informe en Word o PDF", obligatorio=False,
            detalle="la pauta exige uno de los dos formatos")
 

@@ -25,8 +25,8 @@ import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-MD = RAIZ / "informe" / "informe-ep1.md"
-SALIDA = RAIZ / "informe"
+MD = RAIZ / "entrega" / "informe" / "informe-ep1.md"
+SALIDA = RAIZ / "entrega" / "informe"
 
 ANCHO_FIGURA_CM = 16.0
 
@@ -87,8 +87,14 @@ def main():
         # computador de quien evalua.
         import base64
         b64 = base64.b64encode(png.read_bytes()).decode()
-        texto = texto.replace("![Arquitectura de la solución](../docs/arquitectura.svg)",
-                              f'![Arquitectura de la solución](data:image/png;base64,{b64})')
+        # Se sustituye por expresion regular y no por la cadena literal: al mover
+        # el informe de carpeta la ruta relativa cambio, el reemplazo dejo de
+        # coincidir y el .docx salio sin figura sin avisar de nada.
+        texto, n = re.subn(r"!\[([^\]]*)\]\([^)]*arquitectura\.svg\)",
+                           lambda m: f"![{m.group(1)}](data:image/png;base64,{b64})",
+                           texto)
+        if n == 0:
+            print("  aviso: no se encontro la figura en el informe")
 
     from markdown_it import MarkdownIt
     md = MarkdownIt("commonmark").enable("table").enable("strikethrough")

@@ -9,7 +9,7 @@ __pycache__/
 
 # Intermedios de la conversion del informe. El .docx y el .pdf si se versionan:
 # son el entregable. Se regeneran con: python scripts/convertir_informe.py
-informe/informe-ep1.html
+entrega/informe/informe-ep1.html
 docs/arquitectura.png
-docs/slide-*.png
-presentacion/*.pdf
+entrega/presentacion/slide-*.png
+entrega/presentacion/*.pdf

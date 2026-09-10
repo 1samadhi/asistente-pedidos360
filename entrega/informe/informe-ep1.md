@@ -99,7 +99,7 @@ que merecen es distinta:
 
 | Origen | Contenido | Volumen |
 |---|---|---|
-| Interno | Documentación de Pedidos360: README, seis documentos técnicos, CHANGELOG y una guía de errores frecuentes escrita en este proyecto | 10 archivos · 7.210 palabras |
+| Interno | Documentación de Pedidos360: README, seis documentos técnicos, CHANGELOG, y una guía de errores y una descripción del producto escritas en este proyecto | 11 archivos · 7.693 palabras |
 | Externo | RFC 6749 (OAuth 2.0), RFC 7519 (JWT) y OWASP API Security Top 10, acotados a las secciones pertinentes | 3 archivos · ~4.100 palabras |
 
 Los RFC se recortan a propósito: completos —29.000 palabras en inglés— desbalancearían la
@@ -110,7 +110,7 @@ fragmento su documento y sección. Sin ese encabezado, un fragmento tomado de la
 `03-api-gateway.md` no menciona en su texto ni «API Gateway» ni su sección, y su vector no
 se parece a una pregunta que use esas palabras. El tamaño se fija por origen: los RFC son
 texto plano con listas indentadas largas, y con el tamaño de la documentación propia las
-definiciones de error quedaban partidas a mitad de frase. Resultado: 145 fragmentos.
+definiciones de error quedaban partidas a mitad de frase. Resultado: 152 fragmentos.
 
 **Recuperación híbrida.** Búsqueda densa con embeddings locales multilingües, búsqueda
 léxica TF-IDF, y fusión de ambos rankings con *Reciprocal Rank Fusion*, con un tope de dos
@@ -153,7 +153,7 @@ puerto que la documentación da por abierto: el set de evaluación también se e
 
 ## D. Arquitectura de la solución (IE5, IE6)
 
-![Arquitectura de la solución](../docs/arquitectura.svg)
+![Arquitectura de la solución](../../docs/arquitectura.svg)
 
 *Figura 1. Arquitectura del asistente. Trazo continuo: componentes propios; discontinuo:
 sistema externo.*
